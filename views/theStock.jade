@@ -1,0 +1,34 @@
+p NEW YORK STOCK EXCHANGE
+h2= stock.attributes.Name
+
+table
+    tr
+      th QUOTE
+    tr
+      th Last Price
+      th DAY CHANGE
+    tr
+      td= stock.attributes.QueryResult.LastTradePriceOnly
+      td= stock.attributes.QueryResult.Change_PercentChange
+    tr
+      td= stock.attributes.QueryResult.LastTradeDate
+      td= stock.attributes.QueryResult.LastTradeTime + "|"
+      td= stock.attributes.QueryResult.Currency
+table
+    tr
+      th BID
+      th BID SIZE
+      th ASK
+      th ASK SIZE
+      th HIGH
+    tr
+      td= stock.attributes.QueryResult.Bid
+      td= stock.attributes.QueryResult.BookValue
+      td= stock.attributes.QueryResult.Ask
+      td= stock.attributes.QueryResult.AskRealTime
+      td= stock.attributes.QueryResult.DaysHigh
+form(method='post', action='/bid')
+    input(type='number', name='share_number')
+    input(type='hidden', name='stock_symbol', value= stock.attributes.Symbol)
+    input(type='hidden', name='price', value= price)
+    input(type='submit', value='Submit')

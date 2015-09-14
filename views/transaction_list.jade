@@ -1,0 +1,11 @@
+table
+    tr
+      th  User Name
+      th  Game Name
+      th  Select  each game in games
+    each game in games
+      tr
+        td= game.attributes.userName
+        td= game.attributes.gameName
+        th
+          button(onclick='window.location.href="/in_game/' + game.id + '"', value = "Enter")

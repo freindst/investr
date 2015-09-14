@@ -1,0 +1,13 @@
+
+table(width = '80%')
+    tr
+      th Name
+      th Symbol
+      th Last Price
+      th Change $ Percent Change
+    each stock in stocks
+      tr
+        td= stock.name
+        td= stock.symbol
+        td= stock.last_price
+        td= stock.day_change

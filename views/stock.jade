@@ -1,0 +1,11 @@
+table
+  tr
+    td symbol
+    td= stock.symbol
+  tr
+    td percent_change
+    td= stock.Change_PercentChange
+  tr
+    td changeRealTime
+    td= stock.ChangeRealtime
+button(onclick='window.location.href="/quote"') Back

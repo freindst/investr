@@ -1,0 +1,12 @@
+form(method = 'post', action='/joinGame')
+    each user in users
+        input(type='radio', name='user_id', value= user.id)
+        lable= user.attributes.username
+        br
+    br
+    hr
+    each game in games
+        input(type='radio', name='game_id', value= game.id)
+        lable= game.attributes.Name
+        br
+    input(type="submit" value="Submit")

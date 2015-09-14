@@ -1,0 +1,17 @@
+form(method='post', action='/quote')
+    input(type='radio', name='stockname', value='YHOO')
+    | YAHOO
+    br
+    input(type='radio', name='stockname', value='AAPL')
+    | AAPL
+    br
+    input(type='radio', name='stockname', value='GOOG')
+    | GOOGLE
+    br
+    input(type='radio', name='stockname', value='MSFT')
+    | Microsoft
+    br
+    input(type='radio', name='stockname', value="else")
+    | Stockname
+    input(type='text', name='nondefault', placeholder="Input any other ticket")
+    input(type='submit', value='Submit')
