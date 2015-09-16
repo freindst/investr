@@ -206,7 +206,7 @@ router.get('/test', function(req, res) {
 })
 
 router.post('/test', function(req, res) {
-	json = '{"result":' + req.body.test + "}"
+	json = {"result": req.body.test}
 	res.send(json);
 })
 
