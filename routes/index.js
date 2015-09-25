@@ -75,6 +75,7 @@ router.post('/joinGame', function(req, res) {
 			newTransaction.save({
 				gameName: game.attributes.Name,
 				userName: user.attributes.username,
+				GameID: game_id,
 				currentMoney: 100000
 			}).then(function(transaction){
 				var query = new Parse.Query('CurrentQuote');
