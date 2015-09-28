@@ -188,7 +188,7 @@ router.post('/quote', function(req, res){
 	var stockname = req.body.stockname;
 	var json_obj = JSON.parse(Get(Url(stockname)));
 	var stock = json_obj.query.results.quote;
-	res.send(stock);
+	res.send("make it");
 })
 
 /*router.post('/quote', function(req, res){
