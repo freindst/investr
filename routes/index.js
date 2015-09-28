@@ -77,18 +77,7 @@ router.post('/joinGame', function(req, res) {
 				userName: user.attributes.username,
 				GameID: game_id,
 				currentMoney: 100000
-			}).then(function(transaction){
-				var query = new Parse.Query('CurrentQuote');
-				query.find().then(function(stocks){
-					var stocksInHand = new Array();
-					for (var i in stocks) {
-						stocksInHand.push({
-							share: '0',
-							symbol: stocks[i].attributes.Symbol
-						});
-					}
-					transaction.save({stocksInHand: stocksInHand});
-				});
+			}).then(function(){
 				res.send('success');
 			});
 		});
@@ -199,8 +188,15 @@ router.post('/quote', function(req, res){
 	var stockname = req.body.stockname;
 	var json_obj = JSON.parse(Get(Url(stockname)));
 	var stock = json_obj.query.results.quote;
-	res.render('stock', {stock: stock});
+	res.send(stock);
 })
+
+/*router.post('/quote', function(req, res){
+	var stockname = req.body.stockname;
+	var json_obj = JSON.parse(Get(Url(stockname)));
+	var stock = json_obj.query.results.quote;
+	res.render('stock', {stock: stock});
+})*/
 
 router.get('/test', function(req, res) {
 	res.send('test');
