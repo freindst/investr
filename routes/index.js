@@ -277,12 +277,12 @@ router.post('/buy', function(req, res) {
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
-					ownedStocks[i].share = ownedStocks[i].share + buy_number;
+					ownedStocks[i].share = (parseInt(ownedStocks[i].share) + buy_number).toString();
 				} 
 			}
 			if (!isStockExist) {
 				ownedStocks.push({
-					share: buy_number,
+					share: "" + buy_number,
 					symbol: stock_symbol
 				});
 			}
