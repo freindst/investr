@@ -262,7 +262,7 @@ router.post('/joinGame', function(req, res) {
 //buy stock
 router.post('/buy', function(req, res) {
 	var transaction_id = req.body.transaction_id;
-	var buy_number = req.body.share_number;
+	var buy_number = req.body.buy_number;
 	var stock_symbol = req.body.stock_symbol;
 	var json_obj = JSON.parse(Get(Url(stock_symbol)));
 	var stock = json_obj.query.results.quote;
@@ -272,12 +272,13 @@ router.post('/buy', function(req, res) {
 		if (transaction.attributes.currentMoney < buy_number * price) {
 			res.send({ error: "error" });
 		} else {
-			ownedStocks = transaction.attributes.stocksInHand;
+			var ownedStocks = transaction.attributes.stocksInHand;
 			var isStockExist = false
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
-					ownedStocks[i].share = (parseInt(ownedStocks[i].share) + buy_number).toString();
+					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
+					console.log(ownedStocks[i].share);
 				} 
 			}
 			if (!isStockExist) {
@@ -294,9 +295,47 @@ router.post('/buy', function(req, res) {
 			});
 		}
 	})
-})
+});
 
-
+//sell stock
+//need debug
+router.post('/sell', function(req, res) {
+	var transaction_id = req.body.transaction_id;
+	var sell_number = req.body.sell_number;
+	var stock_symbol = req.body.stock_symbol;
+	var json_obj = JSON.parse(Get(Url(stock_symbol)));
+	var stock = json_obj.query.results.quote;
+	var price = stock.Ask;
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction) {
+		var ownedStocks = transaction.attributes.stocksInHand;
+		var currentMoney = transaction.attributes.currentMoney;
+		var isTransactionPass = false;
+		console.log(ownedstocks)
+		for (var i in ownedStocks) {
+			console.log(stock_symbol);
+			console.log(ownedStocks[i].share);
+			if (ownedStocks[i].symbol == stock_symbol) {
+				if (parseInt(ownedStocks[i].share) >= sell_number) {
+					isTransactionPass = true;
+					console.log("isTransactionPass: " + isTransactionPass);
+					console.log(ownedStocks[i].share + sell_number);
+					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - sell_number).toString();					
+				}
+			}
+		}
+		if (isTransactionPass) {
+			transaction.save({
+				currentMoney: transaction.attributes.currentMoney + sell_number * price,
+				stocksInHand: ownedStocks
+			}).then(function() {
+				res.send({message:"success"});
+			});
+		} else {
+			res.send({error:"error"});
+		}
+	});
+});
 
 
 

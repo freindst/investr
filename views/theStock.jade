@@ -28,7 +28,7 @@ table
       td= stock.attributes.QueryResult.AskRealTime
       td= stock.attributes.QueryResult.DaysHigh
 form(method='post', action='/buy')
-    input(type='number', name='share_number')
+    input(type='number', name='buy_number')
     input(type='hidden', name='stock_symbol', value= stock.attributes.Symbol)
     input(type='hidden', name='price', value= price)
     input(type='hidden', name='transaction_id', value= transaction_id)
