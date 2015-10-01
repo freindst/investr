@@ -1,5 +1,5 @@
 p NEW YORK STOCK EXCHANGE
-h2= stock.attributes.Name
+h2= stock.symbol
 
 table
     tr
@@ -8,12 +8,12 @@ table
       th Last Price
       th DAY CHANGE
     tr
-      td= stock.attributes.QueryResult.LastTradePriceOnly
-      td= stock.attributes.QueryResult.Change_PercentChange
+      td= stock.LastTradePriceOnly
+      td= stock.Change_PercentChange
     tr
-      td= stock.attributes.QueryResult.LastTradeDate
-      td= stock.attributes.QueryResult.LastTradeTime + "|"
-      td= stock.attributes.QueryResult.Currency
+      td= stock.LastTradeDate
+      td= stock.LastTradeTime + "|"
+      td= stock.Currency
 table
     tr
       th BID
@@ -22,14 +22,20 @@ table
       th ASK SIZE
       th HIGH
     tr
-      td= stock.attributes.QueryResult.Bid
-      td= stock.attributes.QueryResult.BookValue
-      td= stock.attributes.QueryResult.Ask
-      td= stock.attributes.QueryResult.AskRealTime
-      td= stock.attributes.QueryResult.DaysHigh
+      td= stock.Bid
+      td= stock.BookValue
+      td= stock.Ask
+      td= stock.AskRealTime
+      td= stock.DaysHigh
+
 form(method='post', action='/buy')
     input(type='number', name='buy_number')
-    input(type='hidden', name='stock_symbol', value= stock.attributes.Symbol)
-    input(type='hidden', name='price', value= price)
+    input(type='hidden', name='stock_symbol', value= stock.symbol)
     input(type='hidden', name='transaction_id', value= transaction_id)
-    input(type='submit', value='Submit')
+    input(type='submit', value='Buy')
+
+form(method='post', action='/sell')
+    input(type='number', name='sell_number')
+    input(type='hidden', name='stock_symbol', value= stock.symbol)
+    input(type='hidden', name='transaction_id', value= transaction_id)
+    input(type='submit', value='Sell')

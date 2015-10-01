@@ -11,6 +11,7 @@ var session = require('express-session');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var stocks = require('./routes/stocks');
+var mobile = require('./routes/mobile');
 
 var braintree = require("braintree");
 
@@ -44,6 +45,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use('/stocks', stocks);
+app.use('/mobile', mobile);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,25 +1,32 @@
-form(method='post', action='/findStockById')
-    label You currently has:
+form(method='post', action='/findStockBySymbol')
+    label Your current money is: 
     input(type='text', readonly, name='current_money', value= transaction.attributes.currentMoney)
     hr
     -var n = 0
-    each stock in transaction.attributes.stocksInHand
-        if stock.share != "0"
+    div
+      table
+        thead
           tr
-            td
-              a(href='/getStockBySymbol/' + stock.symbol)= stock.symbol + " | "
-            td= stock.share
-            td
-              button(onclick='window.location.href="/sellStockBySymbol/'+ stock.symbol + '"', value = Sell)
-        else
-          -n++
+            th Stock Symbol
+            th= " || "
+            th Shares
+        tbody
+          each stock in transaction.attributes.stocksInHand
+            if stock.share != "0"
+              tr
+                td
+                  a(href='/getStockBySymbol/' + stock.symbol)= stock.symbol
+                td= " || "
+                td= stock.share
+            else
+              -n++
     if n==transaction.attributes.stocksInHand.length
       p You has no stocks right now
     br
     hr
     a(href='/listAllQuotes') Full Quote Query
     br
-    select(name = "stock_id")
+    select(name = "stock_symbol")
       each stock in stocks
-        option(value= stock.id)= stock.attributes.Symbol + " || " + stock.attributes.Name
+        option(value= stock.attributes.symbol)= stock.attributes.symbol + " || " + stock.attributes.name
     input(type='submit', value='Submit')
