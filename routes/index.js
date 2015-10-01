@@ -15,9 +15,19 @@ var gateway = braintree.connect({
 
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
-/* GET home page. */
+// test server
+router.get('/test', function(req, res) {
+	var stock_symbol = "aapl";
+	var json_obj = JSON.parse(Get(Url(stock_symbol)));
+	var stock = json_obj.query.results.quote;
+	var price = json_obj.query.results.quote.Ask;
+	console.log(price);
+	res.send(stock);
+})
+
+// GET home page.
 router.get('/', function(req, res, next) {
-	res.render('index', { title: 'Stockr' });
+		res.render('index', { title: 'Stockr' });
 });
 
 router.get("/client_token", function (req, res) {
@@ -37,10 +47,12 @@ router.post("/payment-methods", function (req, res) {
     });
 });
 
+//quote demo webpage
 router.get('/quote', function(req, res){
 	res.render('query');
 })
 
+//join game page
 router.get('/joinGame', function(req, res){
 	var userQuery = new Parse.Query("User");
 	var gameQuery = new Parse.Query("Game");
@@ -54,73 +66,7 @@ router.get('/joinGame', function(req, res){
 	});
 })
 
-
-//HTTP Request POST join a new game. Parameter: user_id, game_id
-router.post('/joinGame', function(req, res) {
-	var user_id = req.body.user_id;
-	var game_id = req.body.game_id;
-	var NewTransaction = Parse.Object.extend("Transaction");
-	var newTransaction = new NewTransaction();
-	var userQuery = new Parse.Query("User");
-	var gameQuery = new Parse.Query('Game');
-	userQuery.get(user_id).then(function(user){
-		gameQuery.get(game_id).then(function(game){
-			if (game.attributes.CurrentPlayers == null) {
-				var currentPlayers = new Array();
-			} else {
-				var currentPlayers = game.attributes.CurrentPlayers;
-			}
-			currentPlayers.push(user.attributes.username);
-			game.save({CurrentPlayers: currentPlayers});
-			newTransaction.save({
-				gameName: game.attributes.Name,
-				userName: user.attributes.username,
-				GameID: game_id,
-				currentMoney: 100000
-			}).then(function(){
-				res.send('success');
-			});
-		});
-	})
-})
-
-/*router.post('/joinGame', function(req, res){
-	var NewTransaction = Parse.Object.extend("Transaction");
-	var newTransaction = new NewTransaction();
-	var userQuery = new Parse.Query("User");
-	var gameQuery = new Parse.Query('Game');
-	userQuery.get(req.body.user_id).then(function(user){
-		gameQuery.get(req.body.game_id).then(function(game){
-			if (game.attributes.CurrentPlayers == null) {
-				var currentPlayers = new Array();
-			} else {
-				var currentPlayers = game.attributes.CurrentPlayers;
-			}			
-			currentPlayers.push(user.attributes.username);
-			game.save({CurrentPlayers: currentPlayers});
-				newTransaction.save({
-					gameName: game.attributes.Name,
-					userName: user.attributes.username,
-					currentMoney: 100000
-				}).then(function(transaction){
-					var query = new Parse.Query('CurrentQuote');
-					query.find().then(function(stocks){
-						var stocksInHand = new Array();
-						for (var i in stocks) {
-							stocksInHand.push({
-								share: '0',
-								symbol: stocks[i].attributes.Symbol
-							});
-						}
-						transaction.save({stocksInHand: stocksInHand});
-					})
-					//res.send('done')
-					res.redirect('/all_game');
-				});	
-		});
-	});
-});*/
-
+//all game demo webpage
 router.get('/all_game', function(req, res) {
 	var query = new Parse.Query("Transaction");
 	query.find().then(function(results){
@@ -130,6 +76,7 @@ router.get('/all_game', function(req, res) {
 	})
 })
 
+//demo webpage
 router.get('/in_game/:transaction_id', function(req, res){
 	var transaction_id = req.params.transaction_id;
 	req.session.transaction_id = transaction_id
@@ -145,6 +92,7 @@ router.get('/in_game/:transaction_id', function(req, res){
 	})
 })
 
+//webpage
 router.post('/findStockById', function(req, res){
 	console.log(req.session.transaction_id);
 	var stock_id = req.body.stock_id;
@@ -154,11 +102,28 @@ router.post('/findStockById', function(req, res){
 		console.log(price);
 		res.render('theStock', {
 			stock: stock,
-			price: price
+			price: price,
+			transaction_id: req.session.transaction_id
 		});
 	});
 })
 
+/*router.post('/quote', function(req, res){
+	var stockname = req.body.stockname;
+	var json_obj = JSON.parse(Get(Url(stockname)));
+	var stock = json_obj.query.results.quote;
+	res.render('stock', {stock: stock});
+})*/
+
+//get stock realtime quote
+router.get('/get/:stock_symbol', function(req, res) {
+	var stockname = req.params.stock_symbol;
+	var json_obj = JSON.parse(Get(Url(stockname)));
+	var stock = json_obj.query.results.quote;
+	res.send(stock);
+})
+
+//buy stock
 router.post('/bid', function(req, res) {
 	var bid_number = req.body.share_number;
 	var stock_symbol = req.body.stock_symbol;
@@ -184,44 +149,7 @@ router.post('/bid', function(req, res) {
 	})
 })
 
-router.post('/quote', function(req, res){
-	var stockname = req.body.stockname;
-	var json_obj = JSON.parse(Get(Url(stockname)));
-	var stock = json_obj.query.results.quote;
-	res.send("make it");
-})
-
-
-router.get('/quote/:stockname', function(req, res) {
-	var stockname = req.params.stockname;
-	var json_obj = JSON.parse(Get(Url(stockname)));
-	var stock = json_obj.query.results.quote;
-	res.send(stock);
-})
-
-/*router.post('/quote', function(req, res){
-	var stockname = req.body.stockname;
-	var json_obj = JSON.parse(Get(Url(stockname)));
-	var stock = json_obj.query.results.quote;
-	res.render('stock', {stock: stock});
-})*/
-
-router.get('/test', function(req, res) {
-	res.send('test');
-})
-
-router.post('/test', function(req, res) {
-	json = {"result": req.body.test}
-	res.send(json);
-})
-
-router.get('/get/:stock_symbol', function(req, res) {
-	var stockname = req.params.stock_symbol;
-	var json_obj = JSON.parse(Get(Url(stockname)));
-	var stock = json_obj.query.results.quote;
-	res.send(stock);
-})
-
+//list all users
 router.get('/user', function(req, res) {
 	var userQuery = new Parse.Query("User");
 	userQuery.find({
@@ -233,18 +161,7 @@ router.get('/user', function(req, res) {
 	});
 })
 
-router.get('/time_check', function(req, res) {
-	var query = new Parse.Query("CurrentQuote");
-	query.find().then(function(stocks){
-		var time1 = new Date(stocks[0].updatedAt);
-		var time2 = new Date();
-		var timeDifferences = (time2.getTime() - time1.getTime())/1000/60;
-		console.log(time2.getTime() + " - " +time1.getTime() + " = ");
-		console.log(timeDifferences);
-		res.sendStatus(time2);
-	})
-})
-
+//retrieve all stock info into parse
 router.get('/queryAllQuotes', function(req, res) {
 	var query = new Parse.Query("CurrentQuote");
 	var n = 0;
@@ -273,6 +190,7 @@ router.get('/queryAllQuotes', function(req, res) {
 	});
 })
 
+//list all stock info in parse
 router.get('/listAllQuotes', function(req, res) {
 	var query = new Parse.Query("CurrentQuote");
 	query.find().then(function(results){
@@ -290,6 +208,99 @@ router.get('/listAllQuotes', function(req, res) {
 		res.render('stocks', {stocks: stocks});
 	})
 })
+
+
+//
+//below are client api
+//
+
+//retrieverealtime stock quote
+router.post('/quote', function(req, res){
+	var stockname = req.body.stockname;
+	var json_obj = JSON.parse(Get(Url(stockname)));
+	var stock = json_obj.query.results.quote;
+	res.send(stock);
+})
+
+//get version of quote
+router.get('/quote/:stockname', function(req, res) {
+	var stockname = req.params.stockname;
+	var json_obj = JSON.parse(Get(Url(stockname)));
+	var stock = json_obj.query.results.quote;
+	res.send(stock);
+})
+
+//HTTP Request POST join a new game. Parameter: user_id, game_id
+router.post('/joinGame', function(req, res) {
+	var user_id = req.body.user_id;
+	var game_id = req.body.game_id;
+	var NewTransaction = Parse.Object.extend("Transaction");
+	var newTransaction = new NewTransaction();
+	var userQuery = new Parse.Query("User");
+	var gameQuery = new Parse.Query('Game');
+	userQuery.get(user_id).then(function(user){
+		gameQuery.get(game_id).then(function(game){
+			if (game.attributes.CurrentPlayers == null) {
+				var currentPlayers = new Array();
+			} else {
+				var currentPlayers = game.attributes.CurrentPlayers;
+			}
+			currentPlayers.push(user.attributes.username);
+			game.save({CurrentPlayers: currentPlayers});
+			newTransaction.save({
+				gameName: game.attributes.Name,
+				userName: user.attributes.username,
+				GameID: [{ __type: "Pointer", className: "Game", objectId: game_id }],
+				currentMoney: 100000
+			}).then(function(){
+				res.send('success');
+			});
+		});
+	})
+})
+
+//buy stock
+router.post('/buy', function(req, res) {
+	var transaction_id = req.body.transaction_id;
+	var buy_number = req.body.share_number;
+	var stock_symbol = req.body.stock_symbol;
+	var json_obj = JSON.parse(Get(Url(stock_symbol)));
+	var stock = json_obj.query.results.quote;
+	var price = stock.Ask;
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction) {
+		if (transaction.attributes.currentMoney < buy_number * price) {
+			res.send({ error: "error" });
+		} else {
+			ownedStocks = transaction.attributes.stocksInHand;
+			var isStockExist = false
+			for (var i in ownedStocks) {
+				if (ownedStocks[i].symbol == stock_symbol) {
+					isStockExist = true;
+					ownedStocks[i].share = ownedStocks[i].share + buy_number;
+				} 
+			}
+			if (!isStockExist) {
+				ownedStocks.push({
+					share: buy_number,
+					symbol: stock_symbol
+				});
+			}
+			transaction.save({
+				currentMoney: transaction.attributes.currentMoney - buy_number * price,
+				stocksInHand: ownedStocks
+			}).then(function(){
+				res.send({ message:"success" })
+			});
+		}
+	})
+})
+
+
+
+
+
+
 
 function Url(company) {
 	var result = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20in%20(%22";
