@@ -15,7 +15,7 @@ form(method='post', action='/findStockBySymbol')
             if stock.share != "0"
               tr
                 td
-                  a(href='/getStockBySymbol/' + stock.symbol)= stock.symbol
+                  a(href='/findStockBySymbol/' + stock.symbol)= stock.symbol
                 td= " || "
                 td= stock.share
             else
@@ -24,8 +24,6 @@ form(method='post', action='/findStockBySymbol')
       p You has no stocks right now
     br
     hr
-    a(href='/listAllQuotes') Full Quote Query
-    br
     select(name = "stock_symbol")
       each stock in stocks
         option(value= stock.attributes.symbol)= stock.attributes.symbol + " || " + stock.attributes.name

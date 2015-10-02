@@ -71,7 +71,6 @@ router.post('/buy', function(req, res) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
 					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
-					console.log(ownedStocks[i].share);
 				} 
 			}
 			if (!isStockExist) {
@@ -91,7 +90,6 @@ router.post('/buy', function(req, res) {
 });
 
 //HTTP POST request: sell stock shares. Parameter: transaction_id, buy_number, stock_symbol
-//need debug
 router.post('/sell', function(req, res) {
 	var transaction_id = req.body.transaction_id;
 	var sell_number = req.body.sell_number;

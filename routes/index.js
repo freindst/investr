@@ -89,63 +89,107 @@ router.get('/in_game/:transaction_id', function(req, res){
 })
 
 //webpage
-router.post('/findStockBySymbol', function(req, res){
+router.get('/findStockBySymbol/:stock_symbol', function(req, res) {
+	var stock_symbol = req.params.stock_symbol;
+	var stock = getStock(stock_symbol);
+	res.render('theStock', {
+		stock: stock,
+		transaction_id: req.session.transaction_id
+	});
+});
+
+//webpage
+router.post('/findStockBySymbol', function(req, res) {
 	var stock_symbol = req.body.stock_symbol;
 	var stock = getStock(stock_symbol);
 	res.render('theStock', {
 		stock: stock,
 		transaction_id: req.session.transaction_id
-	})
-	/*var query = new Parse.Query('CurrentQuote');
-	query.get(stock_id).then(function(stock){
-		price = (+stock.attributes.QueryResult.Bid/2 + +stock.attributes.QueryResult.Ask/2);
-		console.log(price);
-		res.render('theStock', {
-			stock: stock,
-			price: price,
-			transaction_id: req.session.transaction_id
-		});
-	});*/
-})
+	});
+});
 
-router.post('/quote', function(req, res){
+//Get real quote
+router.post('/quote', function(req, res) {
 	var stockname = req.body.stockname;
 	var json_obj = JSON.parse(Get(Url(stockname)));
 	var stock = json_obj.query.results.quote;
 	res.render('stock', {stock: stock});
-})
+});
 
 //get stock realtime quote
 router.get('/get/:stock_symbol', function(req, res) {
 	var stock_symbol = req.params.stock_symbol;
 	res.send(getStock(stock_symbol));
-})
+});
 
 //buy stock
-router.post('/bid', function(req, res) {
-	var bid_number = req.body.share_number;
+router.post('/buy', function(req, res) {
+	var transaction_id = req.body.transaction_id;
+	var buy_number = req.body.buy_number;
 	var stock_symbol = req.body.stock_symbol;
-	var price = req.body.price;
-	console.log(price);
+	var stock = getStock(stock_symbol);
+	var price = stock.Ask;
 	var query = new Parse.Query("Transaction");
-	query.get(req.session.transaction_id).then(function(transaction){
-		if (transaction.attributes.currentMoney < bid_number * price) {
-			res.send('You do not have enough money');
+	query.get(transaction_id).then(function(transaction) {
+		if (transaction.attributes.currentMoney < buy_number * price) {
+			res.send({ error: "error" });
 		} else {
-			temp = transaction.attributes.stocksInHand;
-			for (var i in temp) {
-				if (temp[i].symbol == stock_symbol) {
-					temp[i].share = bid_number;
-				}
+			var ownedStocks = transaction.attributes.stocksInHand;
+			var isStockExist = false
+			for (var i in ownedStocks) {
+				if (ownedStocks[i].symbol == stock_symbol) {
+					isStockExist = true;
+					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
+				} 
+			}
+			if (!isStockExist) {
+				ownedStocks.push({
+					share: "" + buy_number,
+					symbol: stock_symbol
+				});
 			}
 			transaction.save({
-				currentMoney: transaction.attributes.currentMoney - bid_number * price,
-				stocksInHand: temp
+				currentMoney: transaction.attributes.currentMoney - buy_number * price,
+				stocksInHand: ownedStocks
 			}).then(function(){});
+		}		
+	});
+	res.redirect("/in_game/" + req.session.transaction_id);
+});
+
+//sell stock
+router.post('/sell', function(req, res) {
+	var transaction_id = req.body.transaction_id;
+	var sell_number = req.body.sell_number;
+	var stock_symbol = req.body.stock_symbol;
+	var stock = getStock(stock_symbol);
+	var price = stock.Ask;
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction) {
+		var ownedStocks = transaction.attributes.stocksInHand;
+		var currentMoney = transaction.attributes.currentMoney;
+		var isTransactionPass = false;
+		for (var i in ownedStocks) {
+			if (ownedStocks[i].symbol == stock_symbol) {
+				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
+					isTransactionPass = true;
+					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
+				} else {
+					res.send({error:"User does not have enough shares to sell."})
+				}
+			}
 		}
-		res.redirect('/in_game/' + req.session.transaction_id);
-	})
-})
+		if (isTransactionPass) {
+			transaction.save({
+				currentMoney: transaction.attributes.currentMoney + sell_number * price,
+				stocksInHand: ownedStocks
+			}).then(function() {});
+		} else {
+			res.send({error:"operation failed"});
+		}
+	});
+	res.redirect("/in_game/" + req.session.transaction_id);
+});
 
 //list all users
 router.get('/user', function(req, res) {
@@ -157,55 +201,8 @@ router.get('/user', function(req, res) {
 			});
 		}
 	});
-})
+});
 
-//retrieve all stock info into parse
-router.get('/queryAllQuotes', function(req, res) {
-	var query = new Parse.Query("CurrentQuote");
-	var n = 0;
-	var stockSymbols = "";
-	query.find().then(function(stocks){
-		for(var i in stocks) {
-			if (n == 0) {
-				stockSymbols = stocks[i].attributes.Symbol;
-				n++;
-			} else if (n == 1 || n == 2) {
-				stockSymbols = stockSymbols + "%22%2C%22" + stocks[i].attributes.Symbol;
-				n++;
-			} else if (n == 3) {
-				stockSymbols = stockSymbols + "%22%2C%22" + stocks[i].attributes.Symbol;
-				var queryResults = JSON.parse(Get(Url(stockSymbols))).query.results.quote;
-				for (var m =0; m < 4; m++) {
-					stocks[i - m].save({QueryResult: queryResults[3 - m]}).then(function(){});
-				}
-				n = 0;
-				stockSymbols = "";
-			}
-		}
-		res.redirect('/');
-	}, function(error){
-		res.send(error);
-	});
-})
-
-//list all stock info in parse
-router.get('/listAllQuotes', function(req, res) {
-	var query = new Parse.Query("CurrentQuote");
-	query.find().then(function(results){
-		var stocks = new Array();
-		for (var i in results) {
-			stocks.push({
-				name: results[i].attributes.Name, 
-				symbol: results[i].attributes.Symbol, 
-				last_price: results[i].attributes.QueryResult.Bid,
-				day_change: results[i].attributes.QueryResult.Change_PercentChange
-			});
-		}
-		return stocks;
-	}).then(function(stocks){
-		res.render('stocks', {stocks: stocks});
-	})
-})
 
 
 //
