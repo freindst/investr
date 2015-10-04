@@ -341,4 +341,8 @@ function getStock(symbol) {
 	return stock;
 }
 
+function round2DesimalDigit(value) {
+	return (double)Math.round(value * 100d) / 100d;
+}
+
 module.exports = router;
