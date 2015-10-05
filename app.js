@@ -29,7 +29,12 @@ var app = express();
 var Parse = require('parse').Parse;
 Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
 
-app.use(session({secret: '1234567890QWERTY'}));
+app.use(session({
+  secret: '1234567890QWERTY',
+  resave: false,
+  saveUninitialized: true,
+  cookie: {}
+}));
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -88,14 +93,5 @@ module.exports = function (req) {
     date: (new Date).toString()
   }
 };
-
-var Fiber = require('fibers');
-function sleep(ms) {
-  var fiber = Fiber.current;
-  setTimeout(function() {
-      fiber.run();
-  }, ms);
-  Fiber.yield();
-}
 
 module.exports = app;
