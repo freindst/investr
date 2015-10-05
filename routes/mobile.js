@@ -66,7 +66,7 @@ router.post('/buy', function(req, res) {
 			res.send({ error: "error" });
 		} else {
 			var ownedStocks = transaction.attributes.stocksInHand;
-			var isStockExist = false
+			var isStockExist = false;
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
@@ -80,10 +80,10 @@ router.post('/buy', function(req, res) {
 				});
 			}
 			transaction.save({
-				currentMoney: transaction.attributes.currentMoney - buy_number * price,
+				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks
 			}).then(function(){
-				res.send({ message:"success" })
+				res.send({ message:"success" });
 			});
 		}
 	})
@@ -107,19 +107,19 @@ router.post('/sell', function(req, res) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
 				} else {
-					res.send({error:"User does not have enough shares to sell."})
+					res.send({error:"User does not have enough shares to sell."});
 				}
 			}
 		}
 		if (isTransactionPass) {
 			transaction.save({
-				currentMoney: transaction.attributes.currentMoney + sell_number * price,
+				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
 				stocksInHand: ownedStocks
 			}).then(function() {
-				res.send({message:"success"});
+				res.send({ message: "success"});
 			});
 		} else {
-			res.send({error:"operation failed"});
+			res.send({ error: "operation failed"});
 		}
 	});
 });
@@ -132,7 +132,12 @@ function getStock(symbol) {
 	Httpreq.open("GET", url, false);
 	Httpreq.send(null);
 	var stock = JSON.parse(Httpreq.responseText).query.results.quote;
-	return stock
+	return stock;
+}
+
+//round to two digits after decimal point
+function round2DesimalDigit(value) {
+	return Math.round(value * 100) / 100;
 }
 
 module.exports = router;

@@ -149,7 +149,7 @@ router.post('/buy', function(req, res) {
 				});
 			}
 			transaction.save({
-				currentMoney: transaction.attributes.currentMoney - buy_number * price,
+				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks
 			}).then(function(){});
 		}		
@@ -181,7 +181,7 @@ router.post('/sell', function(req, res) {
 		}
 		if (isTransactionPass) {
 			transaction.save({
-				currentMoney: transaction.attributes.currentMoney + sell_number * price,
+				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
 				stocksInHand: ownedStocks
 			}).then(function() {});
 		} else {
@@ -342,7 +342,7 @@ function getStock(symbol) {
 }
 
 function round2DesimalDigit(value) {
-	return (double)Math.round(value * 100d) / 100d;
+	return Math.round(value * 100) / 100;
 }
 
 module.exports = router;
