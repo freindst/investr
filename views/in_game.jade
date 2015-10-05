@@ -28,3 +28,8 @@ form(method='post', action='/findStockBySymbol')
       each stock in stocks
         option(value= stock.attributes.symbol)= stock.attributes.symbol + " || " + stock.attributes.name
     input(type='submit', value='Submit')
+
+form(method='post', action='/mobile/checkout')
+  input(type='hidden', name='transaction_id', value= transaction.id)
+  input(type='submit', value='Checkout')
+a.button(href='/checkout/' + transaction.id) checkout

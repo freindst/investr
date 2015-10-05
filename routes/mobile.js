@@ -89,7 +89,7 @@ router.post('/buy', function(req, res) {
 	})
 });
 
-//HTTP POST request: sell stock shares. Parameter: transaction_id, buy_number, stock_symbol
+//HTTP POST request: sell stock shares. Parameter: transaction_id, sell_number, stock_symbol
 router.post('/sell', function(req, res) {
 	var transaction_id = req.body.transaction_id;
 	var sell_number = req.body.sell_number;
@@ -121,6 +121,40 @@ router.post('/sell', function(req, res) {
 		} else {
 			res.send({ error: "operation failed"});
 		}
+	});
+});
+
+//Performing checkout function by selling all stocks in the end of the game.
+//HTTP POST request: Parameter: transaction_id
+router.post('/checkout', function(req, res) {
+	var transaction_id = req.body.transaction_id;
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction) {
+		var ownedStocks = transaction.attributes.stocksInHand;
+		var currentMoney = transaction.attributes.currentMoney;
+		for (var i in ownedStocks) {
+			if (ownedStocks[i].share != "0") {
+				//get asking price of a stock
+				var price = getStock(ownedStocks[i].symbol).Ask;
+				//sell a stock
+				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
+				ownedStocks[i].share = "0";
+			}
+		}
+		transaction.save({
+			currentMoney: currentMoney,
+			stocksInHand: ownedStocks
+		}).then(function(result, err) {
+			if (err) {
+				res.send({
+					error: err
+				});
+			} else {
+				res.send({
+					message: "checkout has been finished"
+				});
+			}
+		});
 	});
 });
 

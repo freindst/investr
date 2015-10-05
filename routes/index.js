@@ -203,12 +203,41 @@ router.get('/user', function(req, res) {
 	});
 });
 
+//Performing checkout function by selling all stocks in the end of the game. Parameter: transaction_id
+router.get('/checkout/:transaction_id', function(req, res) {
+	var transaction_id = req.params.transaction_id;
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction) {
+		var ownedStocks = transaction.attributes.stocksInHand;
+		var currentMoney = transaction.attributes.currentMoney;
+		for (var i in ownedStocks) {
+			if (ownedStocks[i].share != "0") {
+				var price = getStock(ownedStocks[i].symbol).Ask;
+				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
+				ownedStocks[i].share = "0";
+			}
+		}
+		transaction.save({
+			currentMoney: currentMoney,
+			stocksInHand: ownedStocks
+		}).then(function(result, err) {
+			if (err) {
+				res.send({
+					error: err
+				});
+			} else {
+				res.redirect("/in_game/" + req.session.transaction_id);
+			}
+		});
+	});
+});
 
 
 //
 //below are client api
 //
 
+/*
 //get version of quote
 router.get('/quote/:stock_symbol', function(req, res) {
 	var stock_symbol = req.params.stock_symbol;
@@ -262,7 +291,6 @@ router.post('/buy', function(req, res) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
 					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
-					console.log(ownedStocks[i].share);
 				} 
 			}
 			if (!isStockExist) {
@@ -316,7 +344,7 @@ router.post('/sell', function(req, res) {
 		}
 	});
 });
-
+*/
 
 
 
