@@ -59,7 +59,39 @@ router.get('/joinGame', function(req, res){
 			});			
 		});
 	});
-})
+});
+
+//join game function
+router.post('/joinGame', function(req, res) {
+	console.log("in it")
+	var user_id = req.body.user_id;
+	var game_id = req.body.game_id;
+	var NewTransaction = Parse.Object.extend("Transaction");
+	var newTransaction = new NewTransaction();
+	var userQuery = new Parse.Query("User");
+	var gameQuery = new Parse.Query('Game');
+	userQuery.get(user_id).then(function(user){
+		gameQuery.get(game_id).then(function(game){
+			if (game.attributes.CurrentPlayers == null) {
+				var currentPlayers = new Array();
+			} else {
+				var currentPlayers = game.attributes.CurrentPlayers;
+			}
+			currentPlayers.push(user.attributes.username);
+			game.save({CurrentPlayers: currentPlayers});
+			newTransaction.save({
+				gameName: game.attributes.Name,
+				userName: user.attributes.username,
+				GameID: { __type: "Pointer", className: "Game", objectId: game_id },
+				log: [logGenerator("join in the game")],
+				stocksInHand: new Array(),
+				currentMoney: 100000
+			}).then(function(transaction){
+				res.redirect("/in_game/" + transaction.id);
+			});
+		});
+	});
+});
 
 //all game demo webpage
 router.get('/all_game', function(req, res) {
@@ -135,7 +167,9 @@ router.post('/buy', function(req, res) {
 			res.send({ error: "error" });
 		} else {
 			var ownedStocks = transaction.attributes.stocksInHand;
-			var isStockExist = false
+			var log = transaction.attributes.log;
+			console.log(log);
+			var isStockExist = false;
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
@@ -147,10 +181,12 @@ router.post('/buy', function(req, res) {
 					share: "" + buy_number,
 					symbol: stock_symbol
 				});
+				log.push(logGenerator("buy " + stock_symbol + " " + buy_number));
 			}
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
-				stocksInHand: ownedStocks
+				stocksInHand: ownedStocks,
+				log: log
 			}).then(function(){});
 		}		
 	});
@@ -168,12 +204,14 @@ router.post('/sell', function(req, res) {
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
 		var currentMoney = transaction.attributes.currentMoney;
+		var log = transaction.attributes.log;
 		var isTransactionPass = false;
 		for (var i in ownedStocks) {
 			if (ownedStocks[i].symbol == stock_symbol) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
+					log.push(logGenerator("sell " + stock_symbol + " " + sell_number));
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
@@ -182,7 +220,8 @@ router.post('/sell', function(req, res) {
 		if (isTransactionPass) {
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
-				stocksInHand: ownedStocks
+				stocksInHand: ownedStocks,
+				log: log
 			}).then(function() {});
 		} else {
 			res.send({error:"operation failed"});
@@ -210,6 +249,7 @@ router.get('/checkout/:transaction_id', function(req, res) {
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
 		var currentMoney = transaction.attributes.currentMoney;
+		var log = transaction.attributes.log;
 		for (var i in ownedStocks) {
 			if (ownedStocks[i].share != "0") {
 				var price = getStock(ownedStocks[i].symbol).Ask;
@@ -217,9 +257,11 @@ router.get('/checkout/:transaction_id', function(req, res) {
 				ownedStocks[i].share = "0";
 			}
 		}
+		log.push(logGenerator("checkout"));
 		transaction.save({
 			currentMoney: currentMoney,
-			stocksInHand: ownedStocks
+			stocksInHand: ownedStocks,
+			log: log
 		}).then(function(result, err) {
 			if (err) {
 				res.send({
@@ -371,6 +413,17 @@ function getStock(symbol) {
 
 function round2DesimalDigit(value) {
 	return Math.round(value * 100) / 100;
+}
+
+//generate log text string for each operation
+function logGenerator(operation) {
+	var time_stamp = new Date();
+	var operation = operation;
+	var json_obj = {
+		operation: operation,
+		time: time_stamp.toString()		
+	};
+	return json_obj;
 }
 
 module.exports = router;

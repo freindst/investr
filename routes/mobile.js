@@ -44,10 +44,13 @@ router.post('/joinGame', function(req, res) {
 			newTransaction.save({
 				gameName: game.attributes.Name,
 				userName: user.attributes.username,
-				GameID: [{ __type: "Pointer", className: "Game", objectId: game_id }],
+				GameID: { __type: "Pointer", className: "Game", objectId: game_id },
+				log: [logGenerator("join in the game")],
+				stocksInHand: new Array(),
 				currentMoney: 100000
 			}).then(function(){
-				res.send('success');
+				res.send({
+					message: 'success'});
 			});
 		});
 	})
@@ -66,6 +69,8 @@ router.post('/buy', function(req, res) {
 			res.send({ error: "error" });
 		} else {
 			var ownedStocks = transaction.attributes.stocksInHand;
+			var log = transaction.attributes.log;
+			console.log(log);
 			var isStockExist = false;
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
@@ -78,10 +83,13 @@ router.post('/buy', function(req, res) {
 					share: "" + buy_number,
 					symbol: stock_symbol
 				});
+				var new_log = logGenerator("buy " + stock_symbol + " " + buy_number);
+				log.push(new_log);
 			}
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
-				stocksInHand: ownedStocks
+				stocksInHand: ownedStocks,
+				log: log
 			}).then(function(){
 				res.send({ message:"success" });
 			});
@@ -100,21 +108,24 @@ router.post('/sell', function(req, res) {
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
 		var currentMoney = transaction.attributes.currentMoney;
+		var log = transaction.attributes.log;
 		var isTransactionPass = false;
 		for (var i in ownedStocks) {
 			if (ownedStocks[i].symbol == stock_symbol) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
+					log.push(logGenerator("sell " + stock_symbol + " " + sell_number));
 				} else {
-					res.send({error:"User does not have enough shares to sell."});
+					res.send({error:"User does not have enough shares to sell."})
 				}
 			}
 		}
 		if (isTransactionPass) {
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
-				stocksInHand: ownedStocks
+				stocksInHand: ownedStocks,
+				log: log
 			}).then(function() {
 				res.send({ message: "success"});
 			});
@@ -132,18 +143,19 @@ router.post('/checkout', function(req, res) {
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
 		var currentMoney = transaction.attributes.currentMoney;
+		var log = transaction.attributes.log;
 		for (var i in ownedStocks) {
 			if (ownedStocks[i].share != "0") {
-				//get asking price of a stock
 				var price = getStock(ownedStocks[i].symbol).Ask;
-				//sell a stock
 				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				ownedStocks[i].share = "0";
 			}
 		}
+		log.push(logGenerator("checkout"));
 		transaction.save({
 			currentMoney: currentMoney,
-			stocksInHand: ownedStocks
+			stocksInHand: ownedStocks,
+			log: log
 		}).then(function(result, err) {
 			if (err) {
 				res.send({
@@ -172,6 +184,17 @@ function getStock(symbol) {
 //round to two digits after decimal point
 function round2DesimalDigit(value) {
 	return Math.round(value * 100) / 100;
+}
+
+//generate log text for each operation
+function logGenerator(operation) {
+	var time_stamp = new Date();
+	var operation = operation;
+	var json_obj = {
+		operation: operation,
+		time: time_stamp.toString()		
+	};
+	return json_obj;
 }
 
 module.exports = router;
