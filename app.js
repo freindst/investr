@@ -83,15 +83,4 @@ app.use(function(err, req, res, next) {
   });
 });
 
-module.exports = function (req) {
-  // Simulate I/O with a sleep
-  sleep(300);
-  // And then return the result!
-  return {
-    method: req.method,
-    url: req.url,
-    date: (new Date).toString()
-  }
-};
-
 module.exports = app;

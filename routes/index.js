@@ -20,6 +20,12 @@ router.get('/test', function(req, res) {
 	res.send("test");
 })
 
+router.post('/test', function(req, res) {
+	var num = req.body.parameter;
+	console.log(num);
+	res.send(num);
+})
+
 // GET home page.
 router.get('/', function(req, res, next) {
 	res.render('index', { title: 'Stockr' });
@@ -63,7 +69,6 @@ router.get('/joinGame', function(req, res){
 
 //join game function
 router.post('/joinGame', function(req, res) {
-	console.log("in it")
 	var user_id = req.body.user_id;
 	var game_id = req.body.game_id;
 	var NewTransaction = Parse.Object.extend("Transaction");
@@ -274,123 +279,7 @@ router.get('/checkout/:transaction_id', function(req, res) {
 	});
 });
 
-
-//
-//below are client api
-//
-
-/*
-//get version of quote
-router.get('/quote/:stock_symbol', function(req, res) {
-	var stock_symbol = req.params.stock_symbol;
-	res.send(getStock(stock_symbol))
-})
-
-//HTTP Request POST join a new game. Parameter: user_id, game_id
-router.post('/joinGame', function(req, res) {
-	var user_id = req.body.user_id;
-	var game_id = req.body.game_id;
-	var NewTransaction = Parse.Object.extend("Transaction");
-	var newTransaction = new NewTransaction();
-	var userQuery = new Parse.Query("User");
-	var gameQuery = new Parse.Query('Game');
-	userQuery.get(user_id).then(function(user){
-		gameQuery.get(game_id).then(function(game){
-			if (game.attributes.CurrentPlayers == null) {
-				var currentPlayers = new Array();
-			} else {
-				var currentPlayers = game.attributes.CurrentPlayers;
-			}
-			currentPlayers.push(user.attributes.username);
-			game.save({CurrentPlayers: currentPlayers});
-			newTransaction.save({
-				gameName: game.attributes.Name,
-				userName: user.attributes.username,
-				GameID: [{ __type: "Pointer", className: "Game", objectId: game_id }],
-				currentMoney: 100000
-			}).then(function(){
-				res.send('success');
-			});
-		});
-	})
-})
-
-//buy stock
-router.post('/buy', function(req, res) {
-	var transaction_id = req.body.transaction_id;
-	var buy_number = req.body.buy_number;
-	var stock_symbol = req.body.stock_symbol;
-	var stock = getStock(stock_symbol);
-	var price = stock.Ask;
-	var query = new Parse.Query("Transaction");
-	query.get(transaction_id).then(function(transaction) {
-		if (transaction.attributes.currentMoney < buy_number * price) {
-			res.send({ error: "error" });
-		} else {
-			var ownedStocks = transaction.attributes.stocksInHand;
-			var isStockExist = false
-			for (var i in ownedStocks) {
-				if (ownedStocks[i].symbol == stock_symbol) {
-					isStockExist = true;
-					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
-				} 
-			}
-			if (!isStockExist) {
-				ownedStocks.push({
-					share: "" + buy_number,
-					symbol: stock_symbol
-				});
-			}
-			transaction.save({
-				currentMoney: transaction.attributes.currentMoney - buy_number * price,
-				stocksInHand: ownedStocks
-			}).then(function(){
-				res.send({ message:"success" })
-			});
-		}
-	})
-});
-
-//HTTP POST request: sell stock shares. Parameter: transaction_id, buy_number, stock_symbol
-//need debug
-router.post('/sell', function(req, res) {
-	var transaction_id = req.body.transaction_id;
-	var sell_number = req.body.sell_number;
-	var stock_symbol = req.body.stock_symbol;
-	var stock = getStock(stock_symbol);
-	var price = stock.Ask;
-	var query = new Parse.Query("Transaction");
-	query.get(transaction_id).then(function(transaction) {
-		var ownedStocks = transaction.attributes.stocksInHand;
-		var currentMoney = transaction.attributes.currentMoney;
-		var isTransactionPass = false;
-		for (var i in ownedStocks) {
-			if (ownedStocks[i].symbol == stock_symbol) {
-				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
-					isTransactionPass = true;
-					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-				} else {
-					res.send({error:"User does not have enough shares to sell."})
-				}
-			}
-		}
-		if (isTransactionPass) {
-			transaction.save({
-				currentMoney: transaction.attributes.currentMoney + sell_number * price,
-				stocksInHand: ownedStocks
-			}).then(function() {
-				res.send({message:"success"});
-			});
-		} else {
-			res.send({error:"operation failed"});
-		}
-	});
-});
-*/
-
-
-
-
+//functions
 function Url(company) {
 	var result = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20in%20(%22";
 	result = result + company + "%22)%0A%09%09&format=json&diagnostics=true&env=http%3A%2F%2Fdatatables.org%2Falltables.env&callback=";
