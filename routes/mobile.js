@@ -45,7 +45,7 @@ router.post('/joinGame', function(req, res) {
 				gameName: game.attributes.Name,
 				userName: user.attributes.username,
 				GameID: { __type: "Pointer", className: "Game", objectId: game_id },
-				log: [logGenerator("join in the game")],
+				log: [logGenerator("join")],
 				stocksInHand: new Array(),
 				currentMoney: 100000
 			}).then(function(){
@@ -83,7 +83,7 @@ router.post('/buy', function(req, res) {
 					share: "" + buy_number,
 					symbol: stock_symbol
 				});
-				var new_log = logGenerator("buy " + stock_symbol + " " + buy_number);
+				var new_log = logGenerator("buy-" + stock_symbol + "-" + buy_number);
 				log.push(new_log);
 			}
 			transaction.save({
@@ -115,7 +115,7 @@ router.post('/sell', function(req, res) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-					log.push(logGenerator("sell " + stock_symbol + " " + sell_number));
+					log.push(logGenerator("sell-" + stock_symbol + "-" + sell_number));
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
