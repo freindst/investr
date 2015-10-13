@@ -83,9 +83,8 @@ router.post('/buy', function(req, res) {
 					share: "" + buy_number,
 					symbol: stock_symbol
 				});
-				var new_log = logGenerator("buy-" + stock_symbol + "-" + buy_number);
-				log.push(new_log);
 			}
+			log.push(logGenerator("buy-" + stock_symbol + "-" + buy_number));
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks,
