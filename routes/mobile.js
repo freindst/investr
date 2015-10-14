@@ -84,7 +84,7 @@ router.post('/buy', function(req, res) {
 					symbol: stock_symbol
 				});
 			}
-			log.push(logGenerator("buy-" + stock_symbol + "-" + buy_number));
+			log.push(logGenerator("buy-" + stock_symbol + "-$" + buy_number));
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks,
@@ -114,7 +114,7 @@ router.post('/sell', function(req, res) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-					log.push(logGenerator("sell-" + stock_symbol + "-" + sell_number));
+					log.push(logGenerator("sell-" + stock_symbol + "-$" + sell_number));
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
