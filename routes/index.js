@@ -295,10 +295,16 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 	game_id = req.params.game_id;
 	var query = new Parse.Query("Transaction");
 	query.equalTo("GameID", { __type: "Pointer", className: "Game", objectId: game_id });
-	query.find().then(function(transactions){
-		for (var i in transactions) {
-			//console.log(transactions[i].id);
-			checkout(transactions[i].id);
+	query.find().then(function(transactions, error){
+		if (error) {
+			res.send(error);
+		} else {
+			for (var i in transactions) {
+				checkout(transactions[i].id);
+			}
+			res.send({
+				result: "success"
+			});
 		}
 	});
 });

@@ -135,37 +135,23 @@ router.post('/sell', function(req, res) {
 });
 
 //Performing checkout function by selling all stocks in the end of the game.
+//checkout all the players in the game
 //HTTP POST request: Parameter: transaction_id
-router.post('/checkout', function(req, res) {
-	var transaction_id = req.body.transaction_id;
+router.get("/checkoutAll/", function (req, res) {
+	game_id = req.body.game_id;
 	var query = new Parse.Query("Transaction");
-	query.get(transaction_id).then(function(transaction) {
-		var ownedStocks = transaction.attributes.stocksInHand;
-		var currentMoney = transaction.attributes.currentMoney;
-		var log = transaction.attributes.log;
-		for (var i in ownedStocks) {
-			if (ownedStocks[i].share != "0") {
-				var price = getStock(ownedStocks[i].symbol).Ask;
-				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
-				ownedStocks[i].share = "0";
+	query.equalTo("GameID", { __type: "Pointer", className: "Game", objectId: game_id });
+	query.find().then(function(transactions, error){
+		if (error) {
+			res.send(error);
+		} else {
+			for (var i in transactions) {
+				checkout(transactions[i].id);
 			}
+			res.send({
+				result: "success"
+			});
 		}
-		log.push(logGenerator("checkout"));
-		transaction.save({
-			currentMoney: currentMoney,
-			stocksInHand: ownedStocks,
-			log: log
-		}).then(function(result, err) {
-			if (err) {
-				res.send({
-					error: err
-				});
-			} else {
-				res.send({
-					message: "checkout has been finished"
-				});
-			}
-		});
 	});
 });
 
@@ -194,6 +180,36 @@ function logGenerator(operation) {
 		time: time_stamp.toString()		
 	};
 	return json_obj;
+}
+
+function checkout(transaction_id) {
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction) {
+		var ownedStocks = transaction.attributes.stocksInHand;
+		var currentMoney = transaction.attributes.currentMoney;
+		var log = transaction.attributes.log;
+		for (var i in ownedStocks) {
+			if (ownedStocks[i].share != "0") {
+				var price = getStock(ownedStocks[i].symbol).Ask;
+				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
+				ownedStocks[i].share = "0";
+			}
+		}
+		log.push(logGenerator("checkout"));
+		transaction.save({
+			currentMoney: currentMoney,
+			stocksInHand: ownedStocks,
+			log: log
+		}).then(function(result, err) {
+			if (err) {
+				return err;
+			} else {
+				return {
+					result: "success"
+				};
+			}
+		});
+	});
 }
 
 module.exports = router;
