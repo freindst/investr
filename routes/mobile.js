@@ -137,19 +137,60 @@ router.post('/sell', function(req, res) {
 //Performing checkout function by selling all stocks in the end of the game.
 //checkout all the players in the game
 //HTTP POST request: Parameter: transaction_id
-router.get("/checkoutAll/", function (req, res) {
-	game_id = req.body.game_id;
+//checkout all the players in the game
+router.get("/checkoutAll/:game_id", function (req, res) {
+	var game_id = req.params.game_id;
 	var query = new Parse.Query("Transaction");
 	query.equalTo("GameID", { __type: "Pointer", className: "Game", objectId: game_id });
-	query.find().then(function(transactions, error){
-		if (error) {
-			res.send(error);
+	query.find().then(function(transactions, err){
+		if (err) {
+			res.send(err);
 		} else {
+			var rankArray = new Array();
 			for (var i in transactions) {
-				checkout(transactions[i].id);
+				var ownedStocks = transactions[i].attributes.stocksInHand;
+				var currentMoney = transactions[i].attributes.currentMoney;
+				var log = transactions[i].attributes.log;
+				for (var n in ownedStocks) {
+					if (ownedStocks[n].share != "0") {
+						var price = getStock(ownedStocks[n].symbol).Ask;
+						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
+						ownedStocks[n].share = "0";
+					}
+				}
+				log.push(logGenerator("checkout-$" + currentMoney));
+				rankArray.push({
+					username: transactions[i].attributes.userName,
+					wallet: currentMoney
+				});
+				transactions[i].save({
+					currentMoney: currentMoney,
+					stocksInHand: ownedStocks,
+					log: log
+				}).then(function(result, err) {
+					if (err) {
+						res.send(err);
+					}
+				});
 			}
-			res.send({
-				result: "success"
+			rankArray.sort(sort_by("wallet", true, parseFloat));
+			var gameQuery = new Parse.Query("Game");
+			gameQuery.get(game_id).then(function(game, err) {
+				if (err) {
+					res.send(err);
+				} else {
+					var finalStandings = new Array();
+					for (var i in rankArray) {
+						finalStandings.push(rankArray[i].username);
+					}
+					game.save({
+						isFinished: true,
+						finalStandings: finalStandings
+					});
+					res.send({
+						result: "success"
+					});
+				}
 			});
 		}
 	});
@@ -180,36 +221,6 @@ function logGenerator(operation) {
 		time: time_stamp.toString()		
 	};
 	return json_obj;
-}
-
-function checkout(transaction_id) {
-	var query = new Parse.Query("Transaction");
-	query.get(transaction_id).then(function(transaction) {
-		var ownedStocks = transaction.attributes.stocksInHand;
-		var currentMoney = transaction.attributes.currentMoney;
-		var log = transaction.attributes.log;
-		for (var i in ownedStocks) {
-			if (ownedStocks[i].share != "0") {
-				var price = getStock(ownedStocks[i].symbol).Ask;
-				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
-				ownedStocks[i].share = "0";
-			}
-		}
-		log.push(logGenerator("checkout"));
-		transaction.save({
-			currentMoney: currentMoney,
-			stocksInHand: ownedStocks,
-			log: log
-		}).then(function(result, err) {
-			if (err) {
-				return err;
-			} else {
-				return {
-					result: "success"
-				};
-			}
-		});
-	});
 }
 
 module.exports = router;
