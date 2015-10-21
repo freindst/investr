@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var fs = require('fs');
+var schedule = require('node-schedule');
 
 var Parse = require('parse').Parse;
 Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
@@ -25,9 +26,28 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test', function(req, res) {
-	var test = checkout("SVhg3kpMJ5");
-	console.log(test);
-	res.send(test);
+	res.send("test");
+})
+
+//run schedule checkout for each games
+router.get('/run', function(req, res) {
+	var query = new Parse.Query("Game");
+	query.find().then(function(games){
+		for (var i = 0; i < games.length; i++) {
+			(function() {
+				var j = i
+				var date = new Date(games[i].attributes.EndTime);
+				var currentDate = new Date();
+				if (date.getTime() > currentDate.getTime()) {
+					console.log('running checkout ' + games[i].attributes.Name + ' in schedule at ' + date);
+					schedule.scheduleJob(date, function() {
+						checkOutGame(games[j].id);
+					});					
+				}
+			})()
+		}
+	});
+	res.send("running schedule");
 })
 
 router.post('/test', function(req, res) {
@@ -408,6 +428,64 @@ function logGenerator(operation) {
 		time: time_stamp.toString()		
 	};
 	return json_obj;
+}
+
+function checkOutGame(game_id) {
+	var query = new Parse.Query("Transaction");
+	query.equalTo("GameID", { __type: "Pointer", className: "Game", objectId: game_id });
+	query.find().then(function(transactions, err){
+		if (err) {
+			res.send(err);
+		} else {
+			var rankArray = new Array();
+			for (var i in transactions) {
+				var ownedStocks = transactions[i].attributes.stocksInHand;
+				var currentMoney = transactions[i].attributes.currentMoney;
+				var log = transactions[i].attributes.log;
+				for (var n in ownedStocks) {
+					if (ownedStocks[n].share != "0") {
+						var price = getStock(ownedStocks[n].symbol).Ask;
+						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
+						ownedStocks[n].share = "0";
+					}
+				}
+				log.push(logGenerator("checkout-$" + currentMoney));
+				rankArray.push({
+					username: transactions[i].attributes.userName,
+					wallet: currentMoney
+				});
+				transactions[i].save({
+					currentMoney: currentMoney,
+					stocksInHand: ownedStocks,
+					log: log
+				}).then(function(result, err) {
+					if (err) {
+						res.send(err);
+					}
+				});
+			}
+			rankArray.sort(sort_by("wallet", true, parseFloat));
+			var gameQuery = new Parse.Query("Game");
+			gameQuery.get(game_id).then(function(game, err) {
+				if (err) {
+					res.send(err);
+				} else {
+					var finalStandings = new Array();
+					for (var i in rankArray) {
+						finalStandings.push(rankArray[i].username);
+					}
+					game.save({
+						Playing: false,
+						isFinished: true,
+						finalStandings: finalStandings
+					});
+					console.log({
+						result: "success"
+					});
+				}
+			});
+		}
+	});
 }
 
 module.exports = router;
