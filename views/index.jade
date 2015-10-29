@@ -3,9 +3,10 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
-  br
   a(href='/quote') demo to query one stock
-  br
+    br
   a(href='/joingame') demo to join a game
-  br
+    br
   a(href='/all_game') List all games
+    br
+  a(href= '/run') Schedule checkout all games
