@@ -140,11 +140,21 @@ router.post('/joinGame', function(req, res) {
 });
 
 //all game demo webpage
-router.get('/all_game', function(req, res) {
+router.get('/all_games', function(req, res) {
+	var query = new Parse.Query("Game");
+	query.find().then(function(results){
+		res.render('game_list',{
+			games: results
+		});
+	})
+})
+
+//all game
+router.get('/all_transactions', function(req, res) {
 	var query = new Parse.Query("Transaction");
 	query.find().then(function(results){
 		res.render('transaction_list',{
-			games: results
+			transactions: results
 		});
 	})
 })
@@ -323,6 +333,7 @@ router.get('/checkout/:transaction_id', function(req, res) {
 
 //checkout all the players in the game
 router.get("/checkoutAll/:game_id", function (req, res) {
+	console.log("clicked");
 	var game_id = req.params.game_id;
 	var query = new Parse.Query("Transaction");
 	query.equalTo("GameID", { __type: "Pointer", className: "Game", objectId: game_id });
@@ -369,6 +380,7 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 					}
 					game.save({
 						isFinished: true,
+						Playing: false,
 						finalStandings: finalStandings
 					});
 					res.send({

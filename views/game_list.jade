@@ -1,0 +1,9 @@
+table
+    tr
+      th  Game Name
+      th  Terminate
+    each game in games
+      tr
+        td= game.attributes.Name
+        th
+          button(onclick='window.location.href="/checkoutAll/' + game.id + '"', value = "Checkout")

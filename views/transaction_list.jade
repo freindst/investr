@@ -2,10 +2,10 @@ table
     tr
       th  User Name
       th  Game Name
-      th  Select  each game in games
-    each game in games
+      th  Select a Transaction to Enter
+    each transaction in transactions
       tr
-        td= game.attributes.userName
-        td= game.attributes.gameName
+        td= transaction.attributes.userName
+        td= transaction.attributes.gameName
         th
-          button(onclick='window.location.href="/in_game/' + game.id + '"', value = "Enter")
+          button(onclick='window.location.href="/in_game/' + transaction.id + '"', value = "Enter")
