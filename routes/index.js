@@ -256,7 +256,7 @@ router.post('/sell', function(req, res) {
 	var sell_number = req.body.sell_number;
 	var stock_symbol = req.body.stock_symbol;
 	var stock = getStock(stock_symbol);
-	var price = stock.Ask;
+	var price = stock.Bid;
 	var query = new Parse.Query("Transaction");
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
@@ -309,7 +309,7 @@ router.get('/checkout/:transaction_id', function(req, res) {
 		var log = transaction.attributes.log;
 		for (var i in ownedStocks) {
 			if (ownedStocks[i].share != "0") {
-				var price = getStock(ownedStocks[i].symbol).Ask;
+				var price = getStock(ownedStocks[i].symbol).Bid;
 				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				ownedStocks[i].share = "0";
 			}
@@ -348,7 +348,7 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 				var log = transactions[i].attributes.log;
 				for (var n in ownedStocks) {
 					if (ownedStocks[n].share != "0") {
-						var price = getStock(ownedStocks[n].symbol).Ask;
+						var price = getStock(ownedStocks[n].symbol).Bid;
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 						ownedStocks[n].share = "0";
 					}
@@ -456,7 +456,7 @@ function checkOutGame(game_id) {
 				var log = transactions[i].attributes.log;
 				for (var n in ownedStocks) {
 					if (ownedStocks[n].share != "0") {
-						var price = getStock(ownedStocks[n].symbol).Ask;
+						var price = getStock(ownedStocks[n].symbol).Bid;
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 						ownedStocks[n].share = "0";
 					}
