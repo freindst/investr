@@ -374,17 +374,54 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 				if (err) {
 					res.send(err);
 				} else {
-					var finalStandings = new Array();
-					for (var i in rankArray) {
-						finalStandings.push(rankArray[i].username);
-					}
 					game.save({
 						isFinished: true,
 						Playing: false,
-						finalStandings: finalStandings
+						finalStandings: rankArray
 					});
 					res.send({
 						result: "success"
+					});
+				}
+			});
+		}
+	});
+});
+
+router.get("/rank/:game_id", function(req, res){
+	var game_id = req.params.game_id;
+	var query = new Parse.Query("Transaction");
+	query.equalTo("GameID", { __type: "Pointer", className: "Game", objectId: game_id });
+	query.find().then(function(transactions, err){
+		if (err) {
+			res.send(err);
+		} else {
+			var rankArray = new Array();
+			for (var i in transactions) {
+				var ownedStocks = transactions[i].attributes.stocksInHand;
+				var currentMoney = transactions[i].attributes.currentMoney;
+				for (var n in ownedStocks) {
+					if (ownedStocks[n].share != "0") {
+						var price = getStock(ownedStocks[n].symbol).Bid;
+						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
+					}
+				}
+				rankArray.push({
+					username: transactions[i].attributes.userName,
+					wallet: currentMoney
+				});
+			}
+			rankArray.sort(sort_by("wallet", true, parseFloat));
+			var gameQuery = new Parse.Query("Game");
+			gameQuery.get(game_id).then(function(game, err) {
+				if (err) {
+					res.send(err);
+				} else {
+					game.save({
+						finalStandings: rankArray
+					});
+					res.send({
+						ranking: rankArray
 					});
 				}
 			});
