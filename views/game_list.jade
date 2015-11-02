@@ -4,6 +4,7 @@ table
       th  Terminate
     each game in games
       tr
-        td= game.attributes.Name
-        th
-          button(onclick='window.location.href="/checkoutAll/' + game.id + '"', value = "Checkout")
+        if !game.attributes.isFinished
+          td= game.attributes.Name
+          th
+            button(onclick='window.location.href="/checkoutAll/' + game.id + '"', value = "Checkout")
