@@ -91,14 +91,16 @@ router.get('/createGame', function(req, res){
 });
 
 //deal with create game post
-/*router.post('/createGame', function(req, res){
+router.post('/createGame', function(req, res){
 	var gameName = req.body.Name;
-	var StartTime = new Date(req.body.StartTime);
-	var EndTime = new Date(req.body.EndTime);
+	var StartTime = new Date(req.body.StartTime_date + " " +req.body.StartTime_time);
+	var EndTime = new Date(req.body.EndTime_date + " " + req.body.EndTime_time);
 	var Price = req.body.Price;
 	var PotSize = req.body.PotSize;
 	var NewGame = Parse.Object.extend("Game");
 	var newGame = new NewGame();
+	console.log(StartTime);
+	console.log(Price);
 	newGame.save({
 		Name: gameName,
 		Playing: false,
@@ -107,45 +109,19 @@ router.get('/createGame', function(req, res){
 		CurrentPlayers: new Array(),
 		StartTime: StartTime,
 		EndTime: EndTime,
-		Price: Price,
-		PotSize: PotSize
-	}).then(function(game, err) {
-		if (err) {
-			res.send(err);
-		} else {
-			res.rediret('/all_games')
-		}
-	});
-})*/
-
-router.post('/createGame', function(req, res){
-	var gameName = req.body.Name;
-	//var StartTime = new Date(req.body.StartTime_date + req.body.StartTime_time);
-	//var EndTime = new Date(req.body.EndTime);
-	var Price = req.body.Price;
-	var PotSize = req.body.PotSize;
-	var NewGame = Parse.Object.extend("Game");
-	var newGame = new NewGame();
-	console.log(new Date());
-	console.log(req.body.StartTime_time)
-	console.log(req.body.StartTime_date + req.body.StartTime_time)
-	/*ewGame.save({
-		Name: gameName,
-		Playing: false,
-		isFinished: false,
-		finalStandings: new Array(),
-		CurrentPlayers: new Array(),
-		StartTime: StartTime,
-		EndTime: EndTime,
-		Price: Price,
-		PotSize: PotSize
+		Price: parseFloat(Price),
+		PotSize: parseInt(PotSize)
 	}).then(function(game, err){
 		if (err) {
 			res.send(err);
 		} else {
+			//res.send("Okay");
+			schedule.scheduleJob(EndTime, function() {
+						checkOutGame(game.id);
+					});	
 			res.redirect('/all_games');
 		}
-	});*/
+	});
 });
 
 //join game page
