@@ -3,11 +3,13 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
-  a(href='/quote') demo to query one stock
+  a(href='/quote') query one stock
+    br
+  a(href='/creategame') create a game
     br
   a(href='/joingame') demo to join a game
     br
-  a(href='/all_games') List all games (to terminate)
+  a(href='/all_games') List all games (terminate/modify)
     br
   a(href='/all_transactions') List all transactions
     br

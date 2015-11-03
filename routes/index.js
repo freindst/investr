@@ -83,6 +83,71 @@ router.get('/quote', function(req, res){
 	res.render('query');
 })
 
+//create a game
+router.get('/createGame', function(req, res){
+	res.render('createGame', {
+		title: "Create A New Game"
+	});
+});
+
+//deal with create game post
+/*router.post('/createGame', function(req, res){
+	var gameName = req.body.Name;
+	var StartTime = new Date(req.body.StartTime);
+	var EndTime = new Date(req.body.EndTime);
+	var Price = req.body.Price;
+	var PotSize = req.body.PotSize;
+	var NewGame = Parse.Object.extend("Game");
+	var newGame = new NewGame();
+	newGame.save({
+		Name: gameName,
+		Playing: false,
+		isFinished: false,
+		finalStandings: new Array(),
+		CurrentPlayers: new Array(),
+		StartTime: StartTime,
+		EndTime: EndTime,
+		Price: Price,
+		PotSize: PotSize
+	}).then(function(game, err) {
+		if (err) {
+			res.send(err);
+		} else {
+			res.rediret('/all_games')
+		}
+	});
+})*/
+
+router.post('/createGame', function(req, res){
+	var gameName = req.body.Name;
+	//var StartTime = new Date(req.body.StartTime_date + req.body.StartTime_time);
+	//var EndTime = new Date(req.body.EndTime);
+	var Price = req.body.Price;
+	var PotSize = req.body.PotSize;
+	var NewGame = Parse.Object.extend("Game");
+	var newGame = new NewGame();
+	console.log(new Date());
+	console.log(req.body.StartTime_time)
+	console.log(req.body.StartTime_date + req.body.StartTime_time)
+	/*ewGame.save({
+		Name: gameName,
+		Playing: false,
+		isFinished: false,
+		finalStandings: new Array(),
+		CurrentPlayers: new Array(),
+		StartTime: StartTime,
+		EndTime: EndTime,
+		Price: Price,
+		PotSize: PotSize
+	}).then(function(game, err){
+		if (err) {
+			res.send(err);
+		} else {
+			res.redirect('/all_games');
+		}
+	});*/
+});
+
 //join game page
 router.get('/joinGame', function(req, res){
 	var userQuery = new Parse.Query("User");

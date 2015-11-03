@@ -1,0 +1,20 @@
+extends layout
+
+block content
+  h1= title
+  form(method='post', action='/createGame')
+    p Name of the New Game:
+    input(type='string', name='Name')
+    p What is the starting time?
+    input(type='date', name='StartTime_date')
+    input(type='time', name='StartTime_time')
+    p What is the ending time?
+    input(type='date', name='EndTime_date')
+    input(type='time', name='EndTime_time')
+    p What is the price for enter the game?
+    input(type='number', step='0.01', name='Price')
+    p How many people are allowed to join the game?
+    input(type='number', name='PotSize')
+    br
+    br
+    input(type='submit', value='Submit')
