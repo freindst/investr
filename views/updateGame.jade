@@ -6,6 +6,10 @@ block content
     input(type='hidden', name='GameID', value= game.id)
     p Name of the New Game:
     input(type='string', name='Name', placeholder= game.attributes.Name)
+    p Is it in play?
+    input(type='boolean', name='Playing')
+    p Is it finished?
+    input(type='boolean', name='isFinished')
     p What is the starting time?
     input(type='date', name='StartTime_date')
     input(type='time', name='StartTime_time')
