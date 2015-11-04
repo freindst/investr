@@ -90,6 +90,27 @@ router.get('/createGame', function(req, res){
 	});
 });
 
+//update a game
+router.get("/updateGame/:game_id", function(req, res) {
+	var game_id = req.params.game_id;
+	var gameQuery = new Parse.Query("Game");
+	gameQuery.get(game_id).then(function(game, err) {
+		if (err) {
+			res.send(err);
+		} else {
+			res.render("updateGame", {
+				title: "Update the Game",
+				game: game
+			});
+		}
+	});
+});
+
+router.post("/updateGame/", function(req, res) {
+	var game_id = req.body.GameID;
+	res.send('this funcionts has not been implemented yet');
+})
+
 //deal with create game post
 router.post('/createGame', function(req, res){
 	var gameName = req.body.Name;
@@ -469,6 +490,7 @@ router.get("/rank/:game_id", function(req, res){
 		}
 	});
 });
+
 
 
 var sort_by = function(field, reverse, primer){

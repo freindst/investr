@@ -1,10 +1,13 @@
 table
     tr
       th  Game Name
+      th  Update
       th  Terminate
     each game in games
       tr
         if !game.attributes.isFinished
           td= game.attributes.Name
           th
-            button(onclick='window.location.href="/checkoutAll/' + game.id + '"', value = "Checkout")
+            button(onclick='window.location.href="/updateGame/' + game.id + '"') Update Info
+          th
+            button(onclick='window.location.href="/checkoutAll/' + game.id + '"') Checkout All Players
