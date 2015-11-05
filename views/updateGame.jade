@@ -7,9 +7,13 @@ block content
     p Name of the New Game:
     input(type='string', name='Name', placeholder= game.attributes.Name)
     p Is it in play?
-    input(type='boolean', name='Playing')
+    select(name='Playing')
+        option(value= "false") false
+        option(value= "true") true
     p Is it finished?
-    input(type='boolean', name='isFinished')
+    select(name='isFinished')
+        option(value= "false") false
+        option(value= "true") true
     p What is the starting time?
     input(type='date', name='StartTime_date')
     input(type='time', name='StartTime_time')

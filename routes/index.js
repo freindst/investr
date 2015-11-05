@@ -90,26 +90,6 @@ router.get('/createGame', function(req, res){
 	});
 });
 
-//update a game
-router.get("/updateGame/:game_id", function(req, res) {
-	var game_id = req.params.game_id;
-	var gameQuery = new Parse.Query("Game");
-	gameQuery.get(game_id).then(function(game, err) {
-		if (err) {
-			res.send(err);
-		} else {
-			res.render("updateGame", {
-				title: "Update the Game",
-				game: game
-			});
-		}
-	});
-});
-
-router.post("/updateGame/", function(req, res) {
-	var game_id = req.body.GameID;
-	res.send('this funcionts has not been implemented yet');
-})
 
 //deal with create game post
 router.post('/createGame', function(req, res){
@@ -120,8 +100,6 @@ router.post('/createGame', function(req, res){
 	var PotSize = req.body.PotSize;
 	var NewGame = Parse.Object.extend("Game");
 	var newGame = new NewGame();
-	console.log(StartTime);
-	console.log(Price);
 	newGame.save({
 		Name: gameName,
 		Playing: false,
@@ -141,6 +119,55 @@ router.post('/createGame', function(req, res){
 						checkOutGame(game.id);
 					});	
 			res.redirect('/all_games');
+		}
+	});
+});
+
+//update a game
+router.get("/updateGame/:game_id", function(req, res) {
+	var game_id = req.params.game_id;
+	var gameQuery = new Parse.Query("Game");
+	gameQuery.get(game_id).then(function(game, err) {
+		if (err) {
+			res.send(err);
+		} else {
+			res.render("updateGame", {
+				title: "Update the Game",
+				game: game
+			});
+		}
+	});
+});
+
+router.post("/updateGame/", function(req, res) {
+	var game_id = req.body.GameID;
+	var gameName = req.body.Name;
+	var StartTime = new Date(req.body.StartTime_date + " " +req.body.StartTime_time);
+	var EndTime = new Date(req.body.EndTime_date + " " + req.body.EndTime_time);
+	var Price = req.body.Price;
+	var PotSize = req.body.PotSize;
+	var Playing = (req.body.Playing === "true");
+	var isFinished = (req.body.isFinished === "true");
+	var query = new Parse.Query('Game');
+	query.get(game_id).then(function(game, err) {
+		if (err) {
+			res.send(err);
+		} else {
+			game.save({
+				Name: gameName,
+				Playing: Playing,
+				isFinished: isFinished,
+				StartTime: StartTime,
+				EndTime: EndTime,
+				Price: parseFloat(Price),
+				PotSize: parseInt(PotSize),		
+			}).then(function(game, err) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.redirect('/all_games');
+				}
+			});
 		}
 	});
 });
