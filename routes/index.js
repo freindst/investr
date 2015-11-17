@@ -17,6 +17,42 @@ var gateway = braintree.connect({
 
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
+
+/*var schedule_list = new Array();
+{
+	var query = new Parse.Query("Game");
+	query.find().then(function(games){
+		for (var i in games) {
+			(function() {
+				var j = i
+				var currentDate = new Date();
+				var StartTime = new Date(games[j].attributes.StartTime);
+				var EndTime = new Date(games[j].attributes.EndTime);
+				var schedule_i = {
+					GameID: games[j].id,
+					scheduleStart: null,
+					scheduleEnd: null,
+				};
+				if (StartTime.getTime > currentDate.getTime)
+				{
+					schedule_i.scheduleStart = schedule.scheduleJob(StartTime, function() {
+						games[j].save({Playing: true});
+					});
+				}
+				if (EndTime.getTime > currentDate.getTime)
+				{
+					schedule_i.scheduleEnd = schedule.scheduleJob(EndTime, function() {
+						checkOutGame(games[j].id);
+					});
+				}
+				schedule_list.push(schedule_i);
+				console.log(schedule_list);
+			})();
+		}
+	});
+	console.log(schedule_list);
+}*/
+
 // test server
 router.get('/log', function(req, res) {
 	fs.appendFile('message.txt', "10/15",function () {
@@ -26,7 +62,10 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test', function(req, res) {
-	res.send("test");
+	var array = ["YHOO","AAPL","GOOG","MSFT"];
+	console.log(array);
+	var test = getStocks(array);
+	res.send(test[1]);
 })
 
 //run schedule checkout for each games
@@ -115,9 +154,12 @@ router.post('/createGame', function(req, res){
 			res.send(err);
 		} else {
 			//res.send("Okay");
-			schedule.scheduleJob(EndTime, function() {
+			schedule_list.push({
+				GameID: game.id,
+				Schedule: schedule.scheduleJob(EndTime, function() {
 						checkOutGame(game.id);
-					});	
+					})
+			});
 			res.redirect('/all_games');
 		}
 	});
@@ -140,6 +182,7 @@ router.get("/updateGame/:game_id", function(req, res) {
 });
 
 router.post("/updateGame/", function(req, res) {
+	console.log(schedule_list);
 	var game_id = req.body.GameID;
 	var gameName = req.body.Name;
 	var StartTime = new Date(req.body.StartTime_date + " " +req.body.StartTime_time);
@@ -166,6 +209,25 @@ router.post("/updateGame/", function(req, res) {
 					res.send(err);
 				} else {
 					res.redirect('/all_games');
+					var isExist = false;
+					for (var i in schedule_list) {
+						if (schedule_list[i].GameID == game.id) {
+							schedule_list[i].Schedule.cancel();
+							schedule_list[i].Schedule = schedule.scheduleJob(EndTime, function() {checkOutGame(game_id);})
+							console.log(schedule_list);
+							isExist = true;
+							break;
+						}
+					}
+					if (!isExist) {
+						schedule_list.push({
+							GameID: game.id,
+							Schedule: schedule.scheduleJob(EndTime, function() {
+									checkOutGame(game.id);
+								})
+						});
+						console.log(schedule_list);
+					}
 				}
 			});
 		}
@@ -552,6 +614,33 @@ function getStock(symbol) {
 	var json_obj = JSON.parse(Get(Url(symbol)));
 	var stock = json_obj.query.results.quote;
 	return stock;
+}
+
+function getStocks(symbols) {
+	var symbolString = symbols[0];
+	if (symbols.length != 1)
+	{
+		for (var i = 1; i < symbols.length; i++)
+		{
+			symbolString = symbolString + "%22%2C%22" + symbols[i];
+		}
+	}
+	return getStock(symbolString);
+	/*if (symbols.length == 1)
+	{
+		return getStock(symbols[0]);
+	}
+	else
+	{
+		var symbolString = symbols[0];
+		for (var i = 1; i< symbols.length; i++)
+		{
+			symbolString = symbolString + "%22%2C%22" + symbols[i];
+		}
+		var json_obj = JSON.parse(Get(Url(symbolString)));
+		var stocks = json_obj.query.results.quote;
+		return stocks;
+	}*/
 }
 
 function round2DesimalDigit(value) {
