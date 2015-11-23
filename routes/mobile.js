@@ -75,14 +75,18 @@ router.post('/buy', function(req, res) {
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
+					bought_price = round2DesimalDigit((parseFloat(ownedStocks[i].share) * parseFloat(ownedStocks[i].bought_price) + buy_number * price) / (parseFloat(ownedStocks[i].share) + parseFloat(buy_number))).toString();
 					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
+
 				} 
 			}
 			if (!isStockExist) {
 				ownedStocks.push({
 					share: "" + buy_number,
-					symbol: stock_symbol
+					symbol: stock_symbol,
+					bought_price: price
 				});
+				
 			}
 			log.push(logGenerator("buy-" + stock_symbol + "-" + buy_number + "-$" + (buy_number * price)));
 			transaction.save({
@@ -94,6 +98,33 @@ router.post('/buy', function(req, res) {
 			});
 		}
 	})
+});
+
+router.get('/currentGame/:transaction_id', function(req, res) {
+	var transaction_id = req.params.transaction_id;
+	var query = new Parse.Query('Transaction');
+	query.get(transaction_id).then(function(transaction) {
+		var queryResult = [];
+		var stocks = [];
+		var ownedStocks = transaction.attributes.stocksInHand;
+		for (var i in ownedStocks) {
+			stocks.push(ownedStocks[i].symbol);
+		}
+		stocks = stocks.sort();
+		var bids = [];
+		bids = getStocks(stocks);
+		for (var i = 0; i < stocks.length; i++) {
+			queryResult.push(
+				{
+					symbol: ownedStocks[i].symbol,
+					share: ownedStocks[i].share,
+					bought_price: ownedStocks[i].bought_price,
+					change: round2DesimalDigit(parseFloat(ownedStocks[i].bought_price) - parseFloat(bids[i].Bid))
+				}
+			);
+		}
+		res.send({response: queryResult});
+	});
 });
 
 //HTTP POST request: sell stock shares. Parameter: transaction_id, sell_number, stock_symbol
@@ -278,6 +309,18 @@ function getStock(symbol) {
 	Httpreq.send(null);
 	var stock = JSON.parse(Httpreq.responseText).query.results.quote;
 	return stock;
+}
+
+function getStocks(symbols) {
+	var symbolString = symbols[0];
+	if (symbols.length != 1)
+	{
+		for (var i = 1; i < symbols.length; i++)
+		{
+			symbolString = symbolString + "%22%2C%22" + symbols[i];
+		}
+	}
+	return getStock(symbolString);
 }
 
 //round to two digits after decimal point

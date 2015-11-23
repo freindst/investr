@@ -17,6 +17,7 @@ var gateway = braintree.connect({
 
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
+var schedule_list = [];
 
 /*var schedule_list = new Array();
 {
@@ -61,11 +62,19 @@ router.get('/log', function(req, res) {
 	res.send("logegd");
 })
 
-router.get('/test', function(req, res) {
-	var array = ["YHOO","AAPL","GOOG","MSFT"];
-	console.log(array);
-	var test = getStocks(array);
-	res.send(test[1]);
+router.get('/test/:transaction_id', function(req, res) {
+	var transaction_id = req.params.transaction_id;
+	var query = new Parse.Query("Transaction");
+	query.get(transaction_id).then(function(transaction, err) {
+		var ownedStocks = transaction.attributes.stocksInHand;
+		var array = [];
+		for (var i in ownedStocks)
+		{
+			array.push(ownedStocks[i].symbol)
+		}
+		res.send(array.sort());
+	})
+	
 })
 
 //run schedule checkout for each games
@@ -375,18 +384,20 @@ router.post('/buy', function(req, res) {
 		} else {
 			var ownedStocks = transaction.attributes.stocksInHand;
 			var log = transaction.attributes.log;
-			console.log(log);
 			var isStockExist = false;
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
 					isStockExist = true;
+					bought_price = round2DesimalDigit((parseFloat(ownedStocks[i].share) * parseFloat(ownedStocks[i].bought_price) + buy_number * price) / (parseFloat(ownedStocks[i].share) + parseFloat(buy_number))).toString();
 					ownedStocks[i].share = (parseFloat(ownedStocks[i].share) + parseFloat(buy_number)).toString();
+
 				} 
 			}
 			if (!isStockExist) {
 				ownedStocks.push({
 					share: "" + buy_number,
-					symbol: stock_symbol
+					symbol: stock_symbol,
+					bought_price: price
 				});
 				
 			}
@@ -399,6 +410,33 @@ router.post('/buy', function(req, res) {
 		}		
 	});
 	res.redirect("/in_game/" + req.session.transaction_id);
+});
+
+router.get('/currentGame/:transaction_id', function(req, res) {
+	var transaction_id = req.params.transaction_id;
+	var query = new Parse.Query('Transaction');
+	query.get(transaction_id).then(function(transaction) {
+		var queryResult = [];
+		var stocks = [];
+		var ownedStocks = transaction.attributes.stocksInHand;
+		for (var i in ownedStocks) {
+			stocks.push(ownedStocks[i].symbol);
+		}
+		stocks = stocks.sort();
+		var bids = [];
+		bids = getStocks(stocks);
+		for (var i = 0; i < stocks.length; i++) {
+			queryResult.push(
+				{
+					symbol: ownedStocks[i].symbol,
+					share: ownedStocks[i].share,
+					bought_price: ownedStocks[i].bought_price,
+					change: round2DesimalDigit(parseFloat(ownedStocks[i].bought_price) - parseFloat(bids[i].Bid))
+				}
+			);
+		}
+		res.send({response: queryResult});
+	});
 });
 
 //sell stock
@@ -626,21 +664,6 @@ function getStocks(symbols) {
 		}
 	}
 	return getStock(symbolString);
-	/*if (symbols.length == 1)
-	{
-		return getStock(symbols[0]);
-	}
-	else
-	{
-		var symbolString = symbols[0];
-		for (var i = 1; i< symbols.length; i++)
-		{
-			symbolString = symbolString + "%22%2C%22" + symbols[i];
-		}
-		var json_obj = JSON.parse(Get(Url(symbolString)));
-		var stocks = json_obj.query.results.quote;
-		return stocks;
-	}*/
 }
 
 function round2DesimalDigit(value) {
