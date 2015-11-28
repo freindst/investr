@@ -28,32 +28,46 @@ router.get('/quote/:stock_symbol', function(req, res) {
 router.post('/joinGame', function(req, res) {
 	var user_id = req.body.user_id;
 	var game_id = req.body.game_id;
-	var NewTransaction = Parse.Object.extend("Transaction");
-	var newTransaction = new NewTransaction();
 	var userQuery = new Parse.Query("User");
 	var gameQuery = new Parse.Query('Game');
 	userQuery.get(user_id).then(function(user){
 		gameQuery.get(game_id).then(function(game){
+			var playCheck = false;
+			var currentPlayers;
 			if (game.attributes.CurrentPlayers == null) {
-				var currentPlayers = new Array();
+				currentPlayers = new Array();
 			} else {
-				var currentPlayers = game.attributes.CurrentPlayers;
+				currentPlayers = game.attributes.CurrentPlayers;
+				for (var i = 0 in currentPlayers) {
+					if (user.attributes.username = currentPlayers[i]) {
+						playCheck = true
+					}
+				}
 			}
-			currentPlayers.push(user.attributes.username);
-			game.save({CurrentPlayers: currentPlayers});
-			newTransaction.save({
-				gameName: game.attributes.Name,
-				userName: user.attributes.username,
-				GameID: { __type: "Pointer", className: "Game", objectId: game_id },
-				log: [logGenerator("join")],
-				stocksInHand: new Array(),
-				currentMoney: 100000
-			}).then(function(){
+			if (!playCheck) {
+				currentPlayers.push(user.attributes.username);
+				game.save({CurrentPlayers: currentPlayers});
+				var NewTransaction = Parse.Object.extend("Transaction");
+				var newTransaction = new NewTransaction();
+				newTransaction.save({
+					gameName: game.attributes.Name,
+					userName: user.attributes.username,
+					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
+					log: [logGenerator("join")],
+					stocksInHand: new Array(),
+					currentMoney: 100000
+				}).then(function(transaction){
+					res.send({
+						message: "success"
+					});
+				});
+			} else {
 				res.send({
-					message: 'success'});
-			});
+					error: "User is already in the game."
+				})
+			}
 		});
-	})
+	});
 })
 
 //buy stock
@@ -70,7 +84,6 @@ router.post('/buy', function(req, res) {
 		} else {
 			var ownedStocks = transaction.attributes.stocksInHand;
 			var log = transaction.attributes.log;
-			console.log(log);
 			var isStockExist = false;
 			for (var i in ownedStocks) {
 				if (ownedStocks[i].symbol == stock_symbol) {
@@ -88,13 +101,19 @@ router.post('/buy', function(req, res) {
 				});
 				
 			}
-			log.push(logGenerator("buy-" + stock_symbol + "-" + buy_number + "-$" + (buy_number * price)));
+			log.push(logGenerator({
+				op: "buy",
+				symbol: stock_symbol,
+				share: buy_number,
+				price: price,
+				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price)
+			}));
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks,
 				log: log
 			}).then(function(){
-				res.send({ message:"success" });
+				res.send({ message: "success" });
 			});
 		}
 	})
@@ -112,7 +131,14 @@ router.get('/currentGame/:transaction_id', function(req, res) {
 		}
 		stocks = stocks.sort();
 		var bids = [];
-		bids = getStocks(stocks);
+		if (Array.isArray(getStocks(stocks)))
+		{
+			bids = getStocks(stocks);
+		}
+		else
+		{
+			bids.push(getStocks(stocks));
+		}
 		for (var i = 0; i < stocks.length; i++) {
 			queryResult.push(
 				{
@@ -134,6 +160,10 @@ router.post('/sell', function(req, res) {
 	var stock_symbol = req.body.stock_symbol;
 	var stock = getStock(stock_symbol);
 	var price = stock.Bid;
+	if (price == null)
+	{
+		res.send({error: "Transaction is denied. Bid price is not available right now."});
+	}
 	var query = new Parse.Query("Transaction");
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
@@ -145,7 +175,13 @@ router.post('/sell', function(req, res) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-					log.push(logGenerator("sell-" + stock_symbol + "-" + sell_number + "-$" + (sell_number * price)));
+					log.push(logGenerator({
+							op: "sell",
+							symbol: stock_symbol,
+							share: sell_number,
+							price: price,
+							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price)
+						}));
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
@@ -244,6 +280,26 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 		});
 	});
 });
+
+function portfolio(transaction)
+{
+	var ownedStocks = transaction.attributes.stocksInHand;
+	ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
+	var currentMoney = transaction.attributes.currentMoney;
+	console.log(ownedStocks);
+	var stockSymbols = [];
+	for (var i in ownedStocks) {
+		stockSymbols.push(ownedStocks[i].symbol);
+	}
+	var stocks = getStocks(stockSymbols);
+	for (var i = 0; i < ownedStocks.length; i++) {
+		if (ownedStocks[i].share != "0") {
+			var price = stocks[i].Bid;
+			currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
+		}
+	}
+	return portfolio;
+}
 
 router.get("/rank/:game_id", function(req, res){
 	var game_id = req.params.game_id;

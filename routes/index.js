@@ -15,6 +15,23 @@ var gateway = braintree.connect({
   privateKey: "75b2a54536113180c71aab5db13a50d3"
 });
 
+router.get("/client_token", function (req, res) {
+	gateway.clientToken.generate({}, function (err, response) {
+		res.send(response.clientToken);
+	});
+});
+
+router.post("/payment-methods", function (req, res) {
+	var nonce = req.body.payment_method_nonce;
+    // Use payment method nonce here
+    gateway.transaction.sale({
+  	    amount: '10.00',
+    	paymentMethodNonce: nonce,
+    }, function (err, result) {
+    	res.send(result);
+    });
+});
+
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 var schedule_list = [];
@@ -62,20 +79,32 @@ router.get('/log', function(req, res) {
 	res.send("logegd");
 })
 
-router.get('/test/:transaction_id', function(req, res) {
-	var transaction_id = req.params.transaction_id;
-	var query = new Parse.Query("Transaction");
-	query.get(transaction_id).then(function(transaction, err) {
-		var ownedStocks = transaction.attributes.stocksInHand;
-		var array = [];
-		for (var i in ownedStocks)
-		{
-			array.push(ownedStocks[i].symbol)
-		}
-		res.send(array.sort());
-	})
-	
+router.get('/test/:symbol/', function(req, res) {
+	var symbol = req.params.symbol;
+	res.send(getStocks(symbol)[0].Bid);
 })
+
+function portfolio(transaction)
+{
+	var ownedStocks = transaction.attributes.stocksInHand;
+	ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
+	var currentMoney = transaction.attributes.currentMoney;
+	console.log(ownedStocks);
+	var stockSymbols = [];
+	for (var i in ownedStocks) {
+		stockSymbols.push(ownedStocks[i].symbol);
+	}
+	var stocks = getStocks(stockSymbols);
+	for (var i = 0; i < ownedStocks.length; i++) {
+		if (ownedStocks[i].share != "0") {
+			var price = stocks[i].Bid;
+			console.log(price);
+			currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
+		}
+	}
+	console.log(currentMoney);
+	return currentMoney;
+}
 
 //run schedule checkout for each games
 router.get('/run', function(req, res) {
@@ -107,23 +136,6 @@ router.post('/test', function(req, res) {
 // GET home page.
 router.get('/', function(req, res, next) {
 	res.render('index', { title: 'Stockr' });
-});
-
-router.get("/client_token", function (req, res) {
-	gateway.clientToken.generate({}, function (err, response) {
-		res.send(response.clientToken);
-	});
-});
-
-router.post("/payment-methods", function (req, res) {
-	var nonce = req.body.payment_method_nonce;
-    // Use payment method nonce here
-    gateway.transaction.sale({
-  	    amount: '10.00',
-    	paymentMethodNonce: nonce,
-    }, function (err, result) {
-    	res.send(result);
-    });
 });
 
 //quote demo webpage
@@ -401,7 +413,13 @@ router.post('/buy', function(req, res) {
 				});
 				
 			}
-			log.push(logGenerator("buy-" + stock_symbol + "-" + buy_number + "-$" + (buy_number * price)));
+			log.push(logGenerator({
+				op: "buy",
+				symbol: stock_symbol,
+				share: buy_number,
+				price: price,
+				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price)
+			}));
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks,
@@ -426,14 +444,12 @@ router.get('/currentGame/:transaction_id', function(req, res) {
 		var bids = [];
 		bids = getStocks(stocks);
 		for (var i = 0; i < stocks.length; i++) {
-			queryResult.push(
-				{
+			queryResult.push({
 					symbol: ownedStocks[i].symbol,
 					share: ownedStocks[i].share,
 					bought_price: ownedStocks[i].bought_price,
 					change: round2DesimalDigit(parseFloat(ownedStocks[i].bought_price) - parseFloat(bids[i].Bid))
-				}
-			);
+			});
 		}
 		res.send({response: queryResult});
 	});
@@ -457,7 +473,13 @@ router.post('/sell', function(req, res) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-					log.push(logGenerator("sell-" + stock_symbol + "-" + sell_number + "-$" + (sell_number * price)));
+					log.push(logGenerator({
+							op: "sell",
+							symbol: stock_symbol,
+							share: sell_number,
+							price: price,
+							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price)
+						}));
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
@@ -501,6 +523,13 @@ router.get('/checkout/:transaction_id', function(req, res) {
 				var price = getStock(ownedStocks[i].symbol).Bid;
 				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				ownedStocks[i].share = "0";
+				log.push(logGenerator({
+					op: "sell",
+					symbol: ownedStocks[i].symbol,
+					share: ownedStocks[i].share,
+					price: price,
+					wallet: "" + currentMoney
+				}));
 			}
 		}
 		log.push(logGenerator("checkout"));
@@ -540,9 +569,19 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 						var price = getStock(ownedStocks[n].symbol).Bid;
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 						ownedStocks[n].share = "0";
+						log.push(logGenerator({
+							op: "sell",
+							symbol: ownedStocks[n].symbol,
+							share: ownedStocks[n].share,
+							price: price,
+							wallet: "" + currentMoney
+						}));
 					}
 				}
-				log.push(logGenerator("checkout-$" + currentMoney));
+				log.push(logGenerator({
+						op: "checkout",
+						wallet: "" + currentMoney
+				}));
 				rankArray.push({
 					username: transactions[i].attributes.userName,
 					wallet: currentMoney
