@@ -145,6 +145,7 @@ router.get('/currentGame/:transaction_id', function(req, res) {
 					symbol: ownedStocks[i].symbol,
 					share: ownedStocks[i].share,
 					bought_price: ownedStocks[i].bought_price,
+					bid_price: bids[i].Bid,
 					change: round2DesimalDigit(parseFloat(ownedStocks[i].bought_price) - parseFloat(bids[i].Bid))
 				}
 			);
