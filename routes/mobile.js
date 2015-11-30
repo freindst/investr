@@ -126,6 +126,7 @@ router.get('/currentGame/:transaction_id', function(req, res) {
 		var queryResult = [];
 		var stocks = [];
 		var ownedStocks = transaction.attributes.stocksInHand;
+		ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
 		for (var i in ownedStocks) {
 			stocks.push(ownedStocks[i].symbol);
 		}
@@ -266,10 +267,24 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 	var query = new Parse.Query("Transaction");
 	query.get(transaction_id).then(function(transaction) {
 		var ownedStocks = transaction.attributes.stocksInHand;
+		ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
 		var currentMoney = transaction.attributes.currentMoney;
+		var stockSymbols = [];
 		for (var i in ownedStocks) {
+			stockSymbols.push(ownedStocks[i].symbol);
+		}
+		var stocks = [];
+		if (!Array.isArray(getStocks(stockSymbols)))
+		{
+			stocks.push(getStocks(stockSymbols));
+		}
+		else
+		{
+			stocks = getStocks(stockSymbols);
+		}
+		for (var i = 0; i < stocks.length; i++) {
 			if (ownedStocks[i].share != "0") {
-				var price = getStock(ownedStocks[i].symbol).Bid;
+				var price = stocks[i].Bid;
 				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 			}
 		}
@@ -281,26 +296,6 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 		});
 	});
 });
-
-function portfolio(transaction)
-{
-	var ownedStocks = transaction.attributes.stocksInHand;
-	ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
-	var currentMoney = transaction.attributes.currentMoney;
-	console.log(ownedStocks);
-	var stockSymbols = [];
-	for (var i in ownedStocks) {
-		stockSymbols.push(ownedStocks[i].symbol);
-	}
-	var stocks = getStocks(stockSymbols);
-	for (var i = 0; i < ownedStocks.length; i++) {
-		if (ownedStocks[i].share != "0") {
-			var price = stocks[i].Bid;
-			currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
-		}
-	}
-	return portfolio;
-}
 
 router.get("/rank/:game_id", function(req, res){
 	var game_id = req.params.game_id;
