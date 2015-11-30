@@ -39,7 +39,7 @@ router.post('/joinGame', function(req, res) {
 			} else {
 				currentPlayers = game.attributes.CurrentPlayers;
 				for (var i = 0 in currentPlayers) {
-					if (user.attributes.username = currentPlayers[i]) {
+					if (user.attributes.username == currentPlayers[i]) {
 						playCheck = true
 					}
 				}

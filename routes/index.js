@@ -283,8 +283,8 @@ router.post('/joinGame', function(req, res) {
 				currentPlayers = new Array();
 			} else {
 				currentPlayers = game.attributes.CurrentPlayers;
-				for (var i = 0 in currentPlayers) {
-					if (user.attributes.username = currentPlayers[i]) {
+				for (var i in currentPlayers) {
+					if (user.attributes.username == currentPlayers[i]) {
 						playCheck = true
 					}
 				}
