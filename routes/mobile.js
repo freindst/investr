@@ -283,13 +283,10 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 			stocks = getStocks(stockSymbols);
 		}
 		for (var i = 0; i < stocks.length; i++) {
-			if (ownedStocks.length == 0)
+			if (ownedStocks.length != 0)
 			{
-				currentMoney = 0
-			}
-			else
-			{
-				if (ownedStocks[i].share != "0") {
+				if (ownedStocks[i].share != "0")
+				{
 					var price = stocks[i].Bid;
 					currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				}
