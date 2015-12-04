@@ -79,9 +79,11 @@ router.get('/log', function(req, res) {
 	res.send("logegd");
 })
 
-router.get('/test/:symbol/', function(req, res) {
-	var symbol = req.params.symbol;
-	res.send(getStocks(symbol)[0].Bid);
+router.get('/test/', function(req, res) {
+	var symbol = ["AAPL"];
+	var symbols = ["AAPL", "YHOO"];
+	var result = getStocks(symbol);
+	res.send(result);
 })
 
 function portfolio(transaction)
@@ -701,6 +703,13 @@ function getStocks(symbols) {
 		{
 			symbolString = symbolString + "%22%2C%22" + symbols[i];
 		}
+	}
+	var result = [];
+	var temp = getStock(symbolString);
+	if (!Array.isArray(temp))
+	{
+		result.push(getStock(symbolString));
+		return result;
 	}
 	return getStock(symbolString);
 }

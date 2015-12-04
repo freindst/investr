@@ -98,8 +98,7 @@ router.post('/buy', function(req, res) {
 					share: "" + buy_number,
 					symbol: stock_symbol,
 					bought_price: price
-				});
-				
+				});				
 			}
 			log.push(logGenerator({
 				op: "buy",
@@ -131,15 +130,7 @@ router.get('/currentGame/:transaction_id', function(req, res) {
 			stocks.push(ownedStocks[i].symbol);
 		}
 		stocks = stocks.sort();
-		var bids = [];
-		if (Array.isArray(getStocks(stocks)))
-		{
-			bids = getStocks(stocks);
-		}
-		else
-		{
-			bids.push(getStocks(stocks));
-		}
+		var bids = getStocks(stocks);
 		for (var i = 0; i < stocks.length; i++) {
 			queryResult.push(
 				{
@@ -273,15 +264,7 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 		for (var i in ownedStocks) {
 			stockSymbols.push(ownedStocks[i].symbol);
 		}
-		var stocks = [];
-		if (!Array.isArray(getStocks(stockSymbols)))
-		{
-			stocks.push(getStocks(stockSymbols));
-		}
-		else
-		{
-			stocks = getStocks(stockSymbols);
-		}
+		var stocks = getStocks(stockSymbols);
 		for (var i = 0; i < stocks.length; i++) {
 			if (ownedStocks.length != 0)
 			{
@@ -375,6 +358,13 @@ function getStocks(symbols) {
 		{
 			symbolString = symbolString + "%22%2C%22" + symbols[i];
 		}
+	}
+	var result = [];
+	var temp = getStock(symbolString);
+	if (!Array.isArray(temp))
+	{
+		result.push(getStock(symbolString));
+		return result;
 	}
 	return getStock(symbolString);
 }
