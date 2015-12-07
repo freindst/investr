@@ -213,7 +213,15 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 				var log = transactions[i].attributes.log;
 				for (var n in ownedStocks) {
 					if (ownedStocks[n].share != "0") {
-						var price = getStock(ownedStocks[n].symbol).Bid;
+						var price;
+						if (getStock(ownedStocks[n].symbol).Bid != null)
+						{
+							price = getStock(ownedStocks[n].symbol).Bid;
+						}
+						else
+						{
+							price = getStock(ownedStocks[n].symbol).LastTradePriceOnly;
+						}
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 						ownedStocks[n].share = "0";
 					}
@@ -270,7 +278,15 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 			{
 				if (ownedStocks[i].share != "0")
 				{
-					var price = stocks[i].Bid;
+					var price;
+					if (stocks[i].Bid == null)
+					{
+						price = stocks[i].LastTradePriceOnly;
+					}
+					esle
+					{
+						price = stocks[i].Bid;
+					}
 					currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				}
 			}
@@ -298,7 +314,16 @@ router.get("/rank/:game_id", function(req, res){
 				var currentMoney = transactions[i].attributes.currentMoney;
 				for (var n in ownedStocks) {
 					if (ownedStocks[n].share != "0") {
-						var price = getStock(ownedStocks[n].symbol).Bid;
+						//var price = getStock(ownedStocks[n].symbol).Bid;
+						var price;
+						if (getStock(ownedStocks[n].symbol).Bid == null)
+						{
+							price = getStock(ownedStocks[n].symbol).LastTradePriceOnly;
+						}
+						esle
+						{
+							price = getStock(ownedStocks[n].symbol).Bid;
+						}
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 					}
 				}
