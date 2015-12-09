@@ -283,7 +283,7 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 					{
 						price = stocks[i].LastTradePriceOnly;
 					}
-					esle
+					else
 					{
 						price = stocks[i].Bid;
 					}
