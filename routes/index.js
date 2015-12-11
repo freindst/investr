@@ -572,7 +572,7 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 						{
 							price = getStock(ownedStocks[n].symbol).LastTradePriceOnly;
 						}
-						esle
+						else
 						{
 							price = getStock(ownedStocks[n].symbol).Bid;
 						}
