@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 var schedule = require('node-schedule');
+var rsj = require('rsj');
 
 var Parse = require('parse').Parse;
 Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
@@ -80,10 +81,8 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test/', function(req, res) {
-	var symbol = ["AAPL"];
-	var symbols = ["AAPL", "YHOO"];
-	var result = getStocks(symbol);
-	res.send(result);
+	var query = "http://finance.yahoo.com/rss/headline?s=yhoo";
+	rsj.r2j(query,function(json) { res.send(json);});
 })
 
 function portfolio(transaction)

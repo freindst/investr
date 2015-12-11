@@ -1,6 +1,7 @@
 //mobile app api
 var express = require('express');
 var router = express.Router();
+var rsj = require('rsj');
 
 var Parse = require('parse').Parse;
 Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
@@ -22,6 +23,15 @@ router.post('/quote', function(req, res){
 router.get('/quote/:stock_symbol', function(req, res) {
 	var stock_symbol = req.params.stock_symbol;
 	res.send(getStock(stock_symbol));
+})
+
+router.get('/news/:stock_symbol', function(req, res){
+	var stock_symbol = req.params.stock_symbol;
+	var query = "http://finance.yahoo.com/rss/headline?s=" + stock_symbol;
+	rsj.r2j(query,function(json)
+		{
+			res.send(json);
+		});
 })
 
 //HTTP Request POST join a new game. Parameter: user_id, game_id
