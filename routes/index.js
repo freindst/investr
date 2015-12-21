@@ -37,8 +37,7 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 var schedule_list = [];
 
-/*var schedule_list = new Array();
-{
+(function(){
 	var query = new Parse.Query("Game");
 	query.find().then(function(games){
 		for (var i in games) {
@@ -52,25 +51,23 @@ var schedule_list = [];
 					scheduleStart: null,
 					scheduleEnd: null,
 				};
-				if (StartTime.getTime > currentDate.getTime)
+				if (StartTime.getTime() > currentDate.getTime())
 				{
 					schedule_i.scheduleStart = schedule.scheduleJob(StartTime, function() {
 						games[j].save({Playing: true});
 					});
 				}
-				if (EndTime.getTime > currentDate.getTime)
+				if (EndTime.getTime() > currentDate.getTime())
 				{
 					schedule_i.scheduleEnd = schedule.scheduleJob(EndTime, function() {
 						checkOutGame(games[j].id);
 					});
 				}
 				schedule_list.push(schedule_i);
-				console.log(schedule_list);
 			})();
 		}
 	});
-	console.log(schedule_list);
-}*/
+})();
 
 // test server
 router.get('/log', function(req, res) {
@@ -81,8 +78,8 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test/', function(req, res) {
-	var query = "http://finance.yahoo.com/rss/headline?s=yhoo";
-	rsj.r2j(query,function(json) { res.send(json);});
+	console.log(schedule_list);
+	res.send("done");
 })
 
 function portfolio(transaction)
