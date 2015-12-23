@@ -25,6 +25,7 @@ router.get('/quote/:stock_symbol', function(req, res) {
 	res.send(getStock(stock_symbol));
 })
 
+//yahoo finance stock news
 router.get('/news/:stock_symbol', function(req, res){
 	var stock_symbol = req.params.stock_symbol;
 	var query = "http://finance.yahoo.com/rss/headline?s=" + stock_symbol;
