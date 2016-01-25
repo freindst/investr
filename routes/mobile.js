@@ -46,6 +46,53 @@ router.post('/historicaldata/', function(req,res) {
 	res.send(stock);
 })
 
+//return historical quote in past one_month, three_months, six_months or one_year
+router.post('/historicaldata/timescale', function(req, res) {
+	var symbol = req.body.symbol;
+	var today = new Date();
+	var date = today.getDate();
+	var month = today.getMonth() + 1;
+	month += '';
+	if (month.length == 1)
+	{
+		month = '0' + month;
+	}
+	var year = today.getFullYear();
+	var enddate = year + '-' + month + '-' + date;
+	var time_scale = req.body.time_scale;
+	switch (time_scale) {
+		case 'one_month':
+			var day = 30;
+			break;
+		case 'three_months':
+			var day = 90;
+			break;
+		case 'six_months':
+			var day = 180;
+			break;
+		case 'one_year':
+			var day = 365;
+			break;
+		default:
+			var day = 30;
+	};
+	var new_day = new Date(today.getTime() - day * 24 * 60 * 60 * 1000);
+	var new_date = new_day.getDate();
+	var new_month = new_day.getMonth() + 1;
+	new_month += '';
+	if (new_month.length == 1)
+	{
+		new_month = '0' + new_month;
+	}
+	var new_year = new_day.getFullYear();
+	var startdate = new_year + '-' + new_month + '-' + new_date;
+	console.log(enddate + ' ' + startdate);
+	var query = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20%3D%20%22' + symbol + '%22%20and%20startDate%20%3D%20%22' + startdate + '%22%20and%20endDate%20%3D%20%22' + enddate + '%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
+	var json_obj = JSON.parse(Get(query));
+	var stock = json_obj.query.results.quote;
+	res.send(stock);
+});
+
 //HTTP Request POST join a new game. Parameter: user_id, game_id
 router.post('/joinGame', function(req, res) {
 	var user_id = req.body.user_id;
@@ -75,7 +122,10 @@ router.post('/joinGame', function(req, res) {
 					gameName: game.attributes.Name,
 					userName: user.attributes.username,
 					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
-					log: [logGenerator("join")],
+					log: [logGenerator({
+						op: "join",
+						wallet: 10000.00
+					})],
 					stocksInHand: new Array(),
 					currentMoney: 100000
 				}).then(function(transaction){
@@ -385,6 +435,12 @@ var sort_by = function(field, reverse, primer){
      } 
 }
 
+function Get(yourUrl) {
+	var Httpreq = new XMLHttpRequest(); // a new request
+	Httpreq.open("GET",yourUrl,false);
+	Httpreq.send(null);
+	return Httpreq.responseText;
+}
 
 //get stock info from Yahoo! finance api
 function getStock(symbol) {
