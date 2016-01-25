@@ -123,9 +123,9 @@ router.post('/joinGame', function(req, res) {
 					userName: user.attributes.username,
 					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
 					log: {
-						operation: "join",
-						wallet: 10000.00,
-						time: new Date()
+						"operation": "join",
+						"wallet": 10000.00,
+						"time": new Date()
 					},
 					stocksInHand: new Array(),
 					currentMoney: 100000
