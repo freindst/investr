@@ -172,13 +172,14 @@ router.post('/buy', function(req, res) {
 					bought_price: price
 				});				
 			}
-			log.push(logGenerator({
-				op: "buy",
+			log.push({
+				operation: "buy",
 				symbol: stock_symbol,
 				share: buy_number,
 				price: price,
-				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price)
-			}));
+				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
+				time: new Date()
+			});
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks,
