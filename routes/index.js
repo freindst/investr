@@ -308,7 +308,11 @@ router.post('/joinGame', function(req, res) {
 					gameName: game.attributes.Name,
 					userName: user.attributes.username,
 					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
-					log: [logGenerator("join")],
+					log: [{
+						operation: "join",
+						wallet: 10000.00,
+						time: new Date()
+					}],
 					stocksInHand: new Array(),
 					currentMoney: 100000
 				}).then(function(transaction){
@@ -423,13 +427,14 @@ router.post('/buy', function(req, res) {
 				});
 				
 			}
-			log.push(logGenerator({
-				op: "buy",
+			log.push({
+				operation: "buy",
 				symbol: stock_symbol,
 				share: buy_number,
 				price: price,
-				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price)
-			}));
+				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
+				time: new Date()
+			});
 			transaction.save({
 				currentMoney: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				stocksInHand: ownedStocks,
@@ -483,13 +488,14 @@ router.post('/sell', function(req, res) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-					log.push(logGenerator({
-							op: "sell",
+					log.push({
+							operation: "sell",
 							symbol: stock_symbol,
 							share: sell_number,
 							price: price,
-							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price)
-						}));
+							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
+							time: new Date()
+						});
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
@@ -533,16 +539,21 @@ router.get('/checkout/:transaction_id', function(req, res) {
 				var price = getStock(ownedStocks[i].symbol).Bid;
 				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				ownedStocks[i].share = "0";
-				log.push(logGenerator({
-					op: "sell",
+				log.push({
+					operation: "sell",
 					symbol: ownedStocks[i].symbol,
 					share: ownedStocks[i].share,
 					price: price,
-					wallet: "" + currentMoney
-				}));
+					wallet: "" + currentMoney,
+					time: new Date()
+				});
 			}
 		}
-		log.push(logGenerator("checkout"));
+		log.push({
+			operation: "checkout",
+			wallet: currentMoney,
+			time: new Date()
+		});
 		transaction.save({
 			currentMoney: currentMoney,
 			stocksInHand: ownedStocks,
@@ -587,19 +598,21 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 						}
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 						ownedStocks[n].share = "0";
-						log.push(logGenerator({
-							op: "sell",
+						log.push({
+							operation: "sell",
 							symbol: ownedStocks[n].symbol,
 							share: ownedStocks[n].share,
 							price: price,
-							wallet: "" + currentMoney
-						}));
+							wallet: "" + currentMoney,
+							time: new Date()
+						});
 					}
 				}
-				log.push(logGenerator({
-						op: "checkout",
-						wallet: "" + currentMoney
-				}));
+				log.push({
+					operation: "checkout",
+					wallet: currentMoney,
+					time: new Date()
+				});
 				rankArray.push({
 					username: transactions[i].attributes.userName,
 					wallet: currentMoney
