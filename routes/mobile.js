@@ -122,10 +122,11 @@ router.post('/joinGame', function(req, res) {
 					gameName: game.attributes.Name,
 					userName: user.attributes.username,
 					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
-					log: [logGenerator({
-						op: "join",
-						wallet: 10000.00
-					})],
+					log: {
+						operation: "join",
+						wallet: 10000.00,
+						time: new Date()
+					},
 					stocksInHand: new Array(),
 					currentMoney: 100000
 				}).then(function(transaction){
@@ -241,13 +242,14 @@ router.post('/sell', function(req, res) {
 				if (parseInt(ownedStocks[i].share) >= parseInt(sell_number)) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
-					log.push(logGenerator({
+					log.push({
 							op: "sell",
 							symbol: stock_symbol,
 							share: sell_number,
 							price: price,
-							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price)
-						}));
+							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
+							time: new Date()
+						});
 				} else {
 					res.send({error:"User does not have enough shares to sell."})
 				}
@@ -299,7 +301,12 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 						ownedStocks[n].share = "0";
 					}
 				}
-				log.push(logGenerator("checkout-$" + currentMoney));
+				log.push(
+					{
+						operation: "checkout",
+						wallet: currentMoney,
+						time: new Date()
+					});
 				rankArray.push({
 					username: transactions[i].attributes.userName,
 					wallet: currentMoney
