@@ -243,7 +243,7 @@ router.post('/sell', function(req, res) {
 					isTransactionPass = true;
 					ownedStocks[i].share = ((parseInt(ownedStocks[i].share)) - parseInt(sell_number)).toString();
 					log.push({
-							op: "sell",
+							operation: "sell",
 							symbol: stock_symbol,
 							share: sell_number,
 							price: price,
