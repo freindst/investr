@@ -124,7 +124,7 @@ router.post('/joinGame', function(req, res) {
 					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
 					log: [{
 						operation: "join",
-						wallet: 10000.00,
+						wallet: "10000.00",
 						time: new Date()
 					}],
 					stocksInHand: new Array(),
@@ -176,8 +176,8 @@ router.post('/buy', function(req, res) {
 			log.push({
 				operation: "buy",
 				symbol: stock_symbol,
-				share: buy_number,
-				price: price,
+				share: buy_number + "",
+				price: price + "",
 				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				time: new Date()
 			});
@@ -245,8 +245,8 @@ router.post('/sell', function(req, res) {
 					log.push({
 							operation: "sell",
 							symbol: stock_symbol,
-							share: sell_number,
-							price: price,
+							share: sell_number + "",
+							price: price + "",
 							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
 							time: new Date()
 						});
@@ -301,12 +301,11 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 						ownedStocks[n].share = "0";
 					}
 				}
-				log.push(
-					{
-						operation: "checkout",
-						wallet: currentMoney,
-						time: new Date()
-					});
+				log.push({
+					operation: "checkout",
+					wallet: currentMoney + "",
+					time: new Date()
+				});
 				rankArray.push({
 					username: transactions[i].attributes.userName,
 					wallet: currentMoney
