@@ -77,11 +77,42 @@ router.get('/log', function(req, res) {
 	res.send("logegd");
 })
 
-router.get('/test/', function(req, res) {
-	var query = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20%3D%20%22YHOO%22%20and%20startDate%20%3D%20%222009-09-11%22%20and%20endDate%20%3D%20%222010-03-10%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
-	var json_obj = JSON.parse(Get(query));
-	var stock = json_obj.query.results.quote;
-	res.send(stock);
+router.get('/test/', function(req, res){
+	res.send("testing");
+})
+
+router.get('/inPlay/:username', function (req, res) {
+	var username = req.params.username;
+	var gameQuery = new Parse.Query("Game");
+	gameQuery.equalTo("Playing", true);
+	gameQuery.find().then(function(games, err){
+		if (err) {
+			res.send(err);
+		} else {
+			var query = new Parse.Query("Transaction");
+			//must be the user
+			query.equalTo("useName", username);
+			var GamesID = [];
+			for (var i in games)
+			{
+				GamesID.push({ __type: "Pointer", className: "Game", objectId: games[i].id});
+			}
+			//must be in playing game
+			query.containedIn("GameID", GamesID);
+			query.find().then(function(transactions, err){
+				var result = [];
+				for (var i in transactions)
+				{
+					var data = {
+						gameID: transactions[i].attributes.GameID.id,
+						portfolio: portfolio(transactions[i])
+					};
+					result.push(data);
+				}
+				res.send(result);
+			});
+		}
+	});
 });
 
 router.post('/historicaldata/', function(req,res) {
@@ -99,7 +130,6 @@ function portfolio(transaction)
 	var ownedStocks = transaction.attributes.stocksInHand;
 	ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
 	var currentMoney = transaction.attributes.currentMoney;
-	console.log(ownedStocks);
 	var stockSymbols = [];
 	for (var i in ownedStocks) {
 		stockSymbols.push(ownedStocks[i].symbol);
@@ -108,11 +138,9 @@ function portfolio(transaction)
 	for (var i = 0; i < ownedStocks.length; i++) {
 		if (ownedStocks[i].share != "0") {
 			var price = stocks[i].Bid;
-			console.log(price);
 			currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 		}
 	}
-	console.log(currentMoney);
 	return currentMoney;
 }
 

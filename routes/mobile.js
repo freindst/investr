@@ -340,6 +340,39 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 	});
 });
 
+router.get('/inPlay/:username', function(req, res){
+	var username = req.params.username;
+	var gameQuery = new Parse.Query("Game");
+	gameQuery.equalTo("Playing", true);
+	gameQuery.find().then(function(games, err){
+		if (err) {
+			res.send(err);
+		} else {
+			var query = new Parse.Query("Transaction");
+			var GamesID = [];
+			for (var i in games)
+			{
+				GamesID.push({ __type: "Pointer", className: "Game", objectId: games[i].id});
+			}
+			//must be in playing game
+			query.equalTo("userName", username).containedIn("GameID", GamesID);
+			query.find().then(function(transactions, err){
+				var result = [];
+				for (var i in transactions)
+				{
+					console.log(transactions[i].attributes.userName);
+					var data = {
+						gameID: transactions[i].attributes.GameID.id,
+						portfolio: portfolio(transactions[i])
+					};
+					result.push(data);
+				}
+				res.send(result);
+			});
+		}
+	});
+});
+
 router.get("/portfolio/:transaction_id", function(req, res) {
 	var transaction_id = req.params.transaction_id;
 	var query = new Parse.Query("Transaction");
@@ -378,6 +411,36 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 		});
 	});
 });
+
+function portfolio(transaction) {
+	var ownedStocks = transaction.attributes.stocksInHand;
+	ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
+	var currentMoney = transaction.attributes.currentMoney;
+	var stockSymbols = [];
+	for (var i in ownedStocks) {
+		stockSymbols.push(ownedStocks[i].symbol);
+	}
+	var stocks = getStocks(stockSymbols);
+	for (var i = 0; i < stocks.length; i++) {
+		if (ownedStocks.length != 0)
+		{
+			if (ownedStocks[i].share != "0")
+			{
+				var price;
+				if (stocks[i].Bid == null)
+				{
+					price = stocks[i].LastTradePriceOnly;
+				}
+				else
+				{
+					price = stocks[i].Bid;
+				}
+				currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
+			}
+		}
+	}
+	return currentMoney;
+}
 
 router.get("/rank/:game_id", function(req, res){
 	var game_id = req.params.game_id;
