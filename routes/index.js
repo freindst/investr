@@ -78,7 +78,7 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test/', function(req, res){
-	res.send("testing");
+	res.send(schedule_list);
 })
 
 router.get('/inPlay/:username', function (req, res) {
