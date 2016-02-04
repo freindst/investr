@@ -124,7 +124,7 @@ router.post('/joinGame', function(req, res) {
 					GameID: { __type: "Pointer", className: "Game", objectId: game_id },
 					log: [{
 						operation: "join",
-						wallet: "10000.00",
+						wallet: 10000.00,
 						time: new Date()
 					}],
 					stocksInHand: new Array(),
@@ -177,7 +177,7 @@ router.post('/buy', function(req, res) {
 				operation: "buy",
 				symbol: stock_symbol,
 				share: buy_number,
-				price: price,
+				price: parseFloat(price),
 				wallet: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				time: new Date()
 			});
