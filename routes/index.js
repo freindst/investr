@@ -631,7 +631,7 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 							symbol: ownedStocks[n].symbol,
 							share: ownedStocks[n].share,
 							price: price,
-							wallet: "" + currentMoney,
+							wallet: currentMoney,
 							time: new Date()
 						});
 					}

@@ -176,9 +176,9 @@ router.post('/buy', function(req, res) {
 			log.push({
 				operation: "buy",
 				symbol: stock_symbol,
-				share: buy_number + "",
-				price: price + "",
-				wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
+				share: buy_number,
+				price: price,
+				wallet: round2DesimalDigit(transaction.attributes.currentMoney - buy_number * price),
 				time: new Date()
 			});
 			transaction.save({
@@ -245,9 +245,9 @@ router.post('/sell', function(req, res) {
 					log.push({
 							operation: "sell",
 							symbol: stock_symbol,
-							share: sell_number + "",
-							price: price + "",
-							wallet: "" + round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
+							share: sell_number,
+							price: price,
+							wallet: round2DesimalDigit(transaction.attributes.currentMoney + sell_number * price),
 							time: new Date()
 						});
 				} else {
@@ -303,7 +303,7 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 				}
 				log.push({
 					operation: "checkout",
-					wallet: currentMoney + "",
+					wallet: currentMoney,
 					time: new Date()
 				});
 				rankArray.push({
