@@ -359,8 +359,7 @@ router.get('/inPlay/:username', function(req, res){
 			query.find().then(function(transactions, err){
 				var result = [];
 				for (var i in transactions)
-				{
-					console.log(transactions[i].attributes.userName);
+				{					
 					var data = {
 						gameID: transactions[i].attributes.GameID.id,
 						portfolio: portfolio(transactions[i])
@@ -415,7 +414,7 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 function portfolio(transaction) {
 	var ownedStocks = transaction.attributes.stocksInHand;
 	ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
-	var currentMoney = transaction.attributes.currentMoney;
+	var currentMoney = parseFloat(transaction.attributes.currentMoney);
 	var stockSymbols = [];
 	for (var i in ownedStocks) {
 		stockSymbols.push(ownedStocks[i].symbol);
