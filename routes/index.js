@@ -49,7 +49,7 @@ var schedule_list = [];
 				var schedule_i = {
 					GameID: games[j].id,
 					scheduleStart: null,
-					scheduleEnd: null,
+					scheduleEnd: null
 				};
 				if (StartTime.getTime() > currentDate.getTime())
 				{
@@ -81,7 +81,7 @@ router.get('/test/', function(req, res){
 	res.send(schedule_list);
 })
 
-router.get('/inPlay/:username', function (req, res) {
+router.get('/inPlay/:username', function(req, res){
 	var username = req.params.username;
 	var gameQuery = new Parse.Query("Game");
 	gameQuery.equalTo("Playing", true);
@@ -90,19 +90,17 @@ router.get('/inPlay/:username', function (req, res) {
 			res.send(err);
 		} else {
 			var query = new Parse.Query("Transaction");
-			//must be the user
-			query.equalTo("useName", username);
 			var GamesID = [];
 			for (var i in games)
 			{
 				GamesID.push({ __type: "Pointer", className: "Game", objectId: games[i].id});
 			}
 			//must be in playing game
-			query.containedIn("GameID", GamesID);
+			query.equalTo("userName", username).containedIn("GameID", GamesID);
 			query.find().then(function(transactions, err){
 				var result = [];
 				for (var i in transactions)
-				{
+				{					
 					var data = {
 						gameID: transactions[i].attributes.GameID.id,
 						portfolio: portfolio(transactions[i])
@@ -212,13 +210,25 @@ router.post('/createGame', function(req, res){
 		if (err) {
 			res.send(err);
 		} else {
-			//res.send("Okay");
-			schedule_list.push({
+			var schedule_i = {
 				GameID: game.id,
-				Schedule: schedule.scheduleJob(EndTime, function() {
-						checkOutGame(game.id);
-					})
-			});
+				scheduleStart: null,
+				schduleEnd: null
+			};
+			var currentDate = new Date();
+			if (StartTime.getTime() > currentDate.getTime())
+	        {
+	          schedule_i.scheduleStart = schedule.scheduleJob(StartTime, function() {
+	            game.save({Playing: true});
+	          });
+	        }
+	        if (EndTime.getTime() > currentDate.getTime())
+	        {
+	          schedule_i.scheduleEnd = schedule.scheduleJob(EndTime, function() {
+	            checkOutGame(game.id);
+	          });
+	        }
+			schedule_list.push(schedule_i)
 			res.redirect('/all_games');
 		}
 	});
@@ -271,23 +281,32 @@ router.post("/updateGame/", function(req, res) {
 					var isExist = false;
 					for (var i in schedule_list) {
 						if (schedule_list[i].GameID == game.id) {
-							schedule_list[i].Schedule.cancel();
-							schedule_list[i].Schedule = schedule.scheduleJob(EndTime, function() {checkOutGame(game_id);})
-							console.log(schedule_list);
+							schedule_list[i].scheduleStart.cancel();
+							schedule_list[i].scheduleEnd.cancel();
 							isExist = true;
 							break;
 						}
 					}
-					if (!isExist) {
-						schedule_list.push({
-							GameID: game.id,
-							Schedule: schedule.scheduleJob(EndTime, function() {
-									checkOutGame(game.id);
-								})
-						});
-						console.log(schedule_list);
+					var schedule_i = {
+					  GameID: game.id,
+					  scheduleStart: null,
+					  schduleEnd: null
+					};
+					var currentDate = new Date();
+					if (StartTime.getTime() > currentDate.getTime())
+					    {
+					      schedule_i.scheduleStart = schedule.scheduleJob(StartTime, function() {
+					        game.save({Playing: true});
+					      });
+					    }
+					    if (EndTime.getTime() > currentDate.getTime())
+					    {
+					      schedule_i.scheduleEnd = schedule.scheduleJob(EndTime, function() {
+					        checkOutGame(game.id);
+					      });
+					    }
+					schedule_list.push(schedule_i)
 					}
-				}
 			});
 		}
 	});

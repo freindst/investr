@@ -147,7 +147,7 @@ router.post('/joinGame', function(req, res) {
 router.post('/buy', function(req, res) {
 	var transaction_id = req.body.transaction_id;
 	var buy_number = req.body.buy_number;
-	var stock_symbol = req.body.stock_symbol;
+	var stock_symbol = req.body.stock_symbol.toUpperCase();
 	var stock = getStock(stock_symbol);
 	var price = stock.Ask;
 	var query = new Parse.Query("Transaction");
