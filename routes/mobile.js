@@ -376,7 +376,7 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 	var transaction_id = req.params.transaction_id;
 	var query = new Parse.Query("Transaction");
 	query.get(transaction_id).then(function(transaction) {
-		var ownedStocks = transaction.attributes.stocksInHand;
+		/*var ownedStocks = transaction.attributes.stocksInHand;
 		ownedStocks.sort(sort_by('symbol', false, function(a){return a.toUpperCase()}));
 		var currentMoney = transaction.attributes.currentMoney;
 		var stockSymbols = [];
@@ -401,7 +401,9 @@ router.get("/portfolio/:transaction_id", function(req, res) {
 					currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[i].share) * price);
 				}
 			}
-		}
+			
+		}*/
+		var currentMoney = portfolio(transaction);
 		res.send({
 			user: transaction.attributes.userName,
 			time: new Date(),
@@ -451,7 +453,8 @@ router.get("/rank/:game_id", function(req, res){
 		} else {
 			var rankArray = new Array();
 			for (var i in transactions) {
-				var ownedStocks = transactions[i].attributes.stocksInHand;
+				var currentMoney = portfolio(transactions[i]);
+				/*var ownedStocks = transactions[i].attributes.stocksInHand;
 				var currentMoney = transactions[i].attributes.currentMoney;
 				for (var n in ownedStocks) {
 					if (ownedStocks[n].share != "0") {
@@ -467,7 +470,7 @@ router.get("/rank/:game_id", function(req, res){
 						}
 						currentMoney = round2DesimalDigit(currentMoney + parseFloat(ownedStocks[n].share) * price);
 					}
-				}
+				}*/
 				rankArray.push({
 					username: transactions[i].attributes.userName,
 					wallet: currentMoney
