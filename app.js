@@ -12,6 +12,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var stocks = require('./routes/stocks');
 var mobile = require('./routes/mobile');
+var web = require('./routes/web')
 
 var braintree = require("braintree");
 
@@ -26,7 +27,7 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 var app = express();
 
-var Parse = require('parse').Parse;
+Parse = require('parse').Parse;
 Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
 
 app.use(session({
@@ -51,6 +52,7 @@ app.use('/', routes);
 app.use('/users', users);
 app.use('/stocks', stocks);
 app.use('/mobile', mobile);
+app.use('/web', web)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

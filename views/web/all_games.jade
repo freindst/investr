@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+  h2 All Game List
+  p choose a game
+  table.table.tablestriped
+    thead
+      tr
+        th Game Name
+        th
+    tbody
+      each game in games
+        tr
+          td= game.attributes.Name
+          td
+            a(href='#') select

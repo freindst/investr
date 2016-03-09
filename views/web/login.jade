@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+  h2 User List
+  p choose a user to login
+  table.table.tablestriped
+    thead
+      tr
+        th User Name
+        th
+    tbody
+      each user in users
+        tr
+          td= user.attributes.username
+          td
+            a(href='login/#{user.id}') select

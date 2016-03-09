@@ -4,7 +4,7 @@ var fs = require('fs');
 var schedule = require('node-schedule');
 var rsj = require('rsj');
 
-var Parse = require('parse').Parse;
+Parse = require('parse').Parse;
 Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
 
 var braintree = require("braintree");
@@ -171,7 +171,24 @@ router.post('/test', function(req, res) {
 
 // GET home page.
 router.get('/', function(req, res, next) {
-	res.render('index', { title: 'Stockr' });
+	var isLoggedIn = false;
+	if (req.session.hasOwnProperty('user'))
+	{
+		isLoggedIn = true;
+		res.render('index', {
+			title: 'Investr',
+			user: req.session.user,
+			isLoggedIn: isLoggedIn
+		});
+	}
+	res.render('index', { title: 'Investr', isLoggedIn: isLoggedIn, user: null });
+});
+
+// old page
+router.get('/old', function(req, res) {
+	res.render('old/old_index', {
+		title: 'Stockr'
+	});
 });
 
 //quote demo webpage

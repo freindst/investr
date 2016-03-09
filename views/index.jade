@@ -1,16 +1,25 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
-  a(href='/quote') query one stock
-    br
-  a(href='/creategame') create a game
-    br
-  a(href='/joingame') demo to join a game
-    br
-  a(href='/all_games') List all games (terminate/modify)
-    br
-  a(href='/all_transactions') List all transactions
-    br
-  a(href= '/run') Schedule checkout all games
+  h1 Welcome To 
+    B INVESTR!
+  hr
+  if isLoggedIn
+    p Hello, #{user.username} !
+  else
+    ul
+      li If you have an account, please&nbsp
+        a(href='/web/login') Login
+        | &nbspto start gaming.
+      li Otherwise, please&nbsp
+        a(href='#') Sign Up
+        | &nbsptoday.
+  hr
+  h3 Game Menu
+  ul
+    li
+      a(href='/web/all_games') All Games
+    li 
+      a(href='#') My Games
+    li
+      a(href='#') Game History
