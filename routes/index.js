@@ -23,14 +23,25 @@ router.get("/client_token", function (req, res) {
 });
 
 router.post("/payment-methods", function (req, res) {
-	var nonce = req.body.payment_method_nonce;
-    // Use payment method nonce here
-    gateway.transaction.sale({
-  	    amount: req.body.amount,
-    	paymentMethodNonce: nonce,
-    }, function (err, result) {
-    	res.send(result);
-    });
+	var isLoggedIn = false;
+	if (!req.session.hasOwnProperty('user')) {
+		res.redirect('/login');
+	} else {
+		var nonce = req.body.payment_method_nonce;
+	    // Use payment method nonce here
+	    var amount = req.body.amount;
+	    if (amount) {
+		    gateway.transaction.sale({
+		  	    amount: req.body.amount,
+		    	paymentMethodNonce: nonce,
+		    }, function (err, result) {
+		    	res.redirect('/');
+		    });    	
+	    } else {
+	    	res.send('no money put in');
+	    }		
+	}
+
 });
 
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
@@ -182,6 +193,21 @@ router.get('/', function(req, res, next) {
 		});
 	}
 	res.render('index', { title: 'Investr', isLoggedIn: isLoggedIn, user: null });
+});
+
+router.get('/buy_token', function(req, res) {
+	var isLoggedIn = false;
+	if (req.session.hasOwnProperty('user')) {
+		isLoggedIn = true;
+		res.render('buy_token', {
+			title: 'Investr',
+			user: req.session.user,
+			isLoggedIn: isLoggedIn
+		});	
+	}
+	else {
+		res.redirect('/web/login');
+	}
 });
 
 // old page

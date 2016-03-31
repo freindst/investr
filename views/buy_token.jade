@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  form#checkout(method='post', action='/payment-methods')
+    #payment-form
+    .form-group
+      label Amount
+      select.form-control(name='amount')
+        option(value='10') 10 Token for $9.99
+        option(value='20') 20 Token for $19.99
+        option(value='50') 50 Token for $49.99
+    .form-group
+      input.btn.btn-primary.btn-block(type='submit', value='Pay')
+      a.btn.btn-primary.btn-block(href='/') Cancel
+
+
+block script
+  script(src='https://js.braintreegateway.com/js/braintree-2.22.1.min.js')
+  script.
+      $(document).ready(function(){
+        $.get('/client_token', function(Client_Token, status) {
+          braintree.setup(Client_Token, "dropin", {
+            container: "payment-form"
+          });
+        });
+      });

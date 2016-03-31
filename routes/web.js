@@ -3,7 +3,7 @@ var router = express.Router();
 
 //web
 router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+  res.send('respond with a resource in web');
 });
 
 //login
