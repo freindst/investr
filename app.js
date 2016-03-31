@@ -16,12 +16,12 @@ var web = require('./routes/web')
 
 var braintree = require("braintree");
 
-var gateway = braintree.connect({
+/*var gateway = braintree.connect({
   environment: braintree.Environment.Sandbox,
   merchantId: "useYourMerchantId",
   publicKey: "useYourPublicKey",
   privateKey: "useYourPrivateKey"
-});
+});*/
 
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 

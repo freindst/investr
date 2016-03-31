@@ -11,9 +11,9 @@ var braintree = require("braintree");
 
 var gateway = braintree.connect({
   environment: braintree.Environment.Sandbox,
-  merchantId: "nbxqn839vhj8tr3z",
-  publicKey: "cyc9gssnmpjbzxbq",
-  privateKey: "75b2a54536113180c71aab5db13a50d3"
+  merchantId: "5twc7f5c44t8k6wn",
+  publicKey: "s594frh5fpysncx7",
+  privateKey: "8e0637645f1067a80e710b2eb36e359c"
 });
 
 router.get("/client_token", function (req, res) {
@@ -26,7 +26,7 @@ router.post("/payment-methods", function (req, res) {
 	var nonce = req.body.payment_method_nonce;
     // Use payment method nonce here
     gateway.transaction.sale({
-  	    amount: '10.00',
+  	    amount: req.body.amount,
     	paymentMethodNonce: nonce,
     }, function (err, result) {
     	res.send(result);
@@ -78,7 +78,7 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test/', function(req, res){
-	res.send(schedule_list);
+	res.render('test');
 })
 
 router.get('/inPlay/:username', function(req, res){

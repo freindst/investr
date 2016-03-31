@@ -8,6 +8,7 @@
   "dependencies": {
     "body-parser": "~1.14.1",
     "braintree": "*",
+    "braintree-web": "^2.22.1",
     "cookie-parser": "~1.4.0",
     "debug": "~2.2.0",
     "express": "~4.13.1",
