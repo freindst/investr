@@ -1,16 +1,38 @@
 extends ../layout
 
 block content
-  h2 User List
-  p choose a user to login
-  table.table.tablestriped
-    thead
-      tr
-        th User Name
-        th
-    tbody
-      each user in users
-        tr
-          td= user.attributes.username
-          td
-            a(href='login/#{user.id}') select
+  h2 User Login
+  .container-fluid
+    form#login()
+      .form-group
+        label(for='username') Username
+        input#username.form-control(type='text' name='username')
+      .form-group
+        label(for='password') Password
+        input#password.form-control(type='password' name='password')
+      .form-group
+        input.btn.btn-primary.btn-block(type='submit' value='Submit')
+
+block script
+  script.
+    $(function() {
+      Parse.$ = jQuery;
+      Parse.initialize("FqNt8xkKnxeEdBqV5te9vJAOQQ7dRNsO69Bqno9y", "yrRCAxIDLnAxnKaBltA2YfznMnh6eEY2uuG0QCDl");
+    })
+
+    $('#login').on('submit', function(event) {
+      event.preventDefault();
+
+      var data = $(this).serializeArray(),
+        username = data[0].value,
+        password = data[1].value;
+
+      Parse.User.logIn(username, password, {
+        success: function(user) {
+          window.location.replace("/web/login/" + user.id);
+        },
+        error: function(user, error) {
+          console.log(error)
+        }
+      })
+    })

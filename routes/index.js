@@ -22,6 +22,10 @@ router.get("/client_token", function (req, res) {
 	});
 });
 
+router.post("/payment_method_nonce", function(req, res) {
+	res.send(req.body.payment_method_nonce);
+});
+
 router.post("/payment-methods", function (req, res) {
 	var isLoggedIn = false;
 	if (!req.session.hasOwnProperty('user')) {
@@ -35,7 +39,19 @@ router.post("/payment-methods", function (req, res) {
 		  	    amount: req.body.amount,
 		    	paymentMethodNonce: nonce,
 		    }, function (err, result) {
-		    	res.redirect('/');
+		    	var userQuery = new Parse.Query("User");
+		    	userQuery.get(req.session.user.objectId).then(function(user) {
+		    		var token = parseInt(req.session.tokens) + parseInt(req.body.amount);
+		    		console.log(token);
+		    		req.session.tokens = token;
+					var tokenQuery = new Parse.Query('Tokens');
+					tokenQuery.equalTo('user', user);
+					tokenQuery.find().then(function(token) {
+						console.log(token);
+						token[0].save({token: token})
+						res.redirect('/')
+					});
+		    	});		    	
 		    });    	
 	    } else {
 	    	res.send('no money put in');
@@ -189,10 +205,14 @@ router.get('/', function(req, res, next) {
 		res.render('index', {
 			title: 'Investr',
 			user: req.session.user,
+			token: req.session.tokens,
 			isLoggedIn: isLoggedIn
 		});
 	}
-	res.render('index', { title: 'Investr', isLoggedIn: isLoggedIn, user: null });
+	else {
+		res.render('index', { title: 'Investr', isLoggedIn: isLoggedIn, user: null, token: null});		
+	}
+
 });
 
 router.get('/buy_token', function(req, res) {
@@ -202,6 +222,7 @@ router.get('/buy_token', function(req, res) {
 		res.render('buy_token', {
 			title: 'Investr',
 			user: req.session.user,
+			token: req.session.tokens,
 			isLoggedIn: isLoggedIn
 		});	
 	}

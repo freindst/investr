@@ -28,13 +28,19 @@ router.get('/login/:userid', function(req, res) {
 	var userid = req.params.userid;
 	var userQuery = new Parse.Query('User');
 	userQuery.get(userid).then(function(user) {
-		req.session.user = user;
-		res.redirect('/');
+		var tokenQuery = new Parse.Query('Tokens');
+		tokenQuery.equalTo('user', user);
+		tokenQuery.find().then(function(token) {
+			req.session.user = user;
+			req.session.tokens = token[0].attributes.token;
+			res.redirect('/');
+		});
 	});
 });
 
 router.get('/log_out/', function(req, res) {
 	delete req.session.user;
+	delete req.session.tokens;
 	res.redirect('/');
 });
 
