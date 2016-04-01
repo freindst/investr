@@ -42,14 +42,19 @@ router.post("/payment-methods", function (req, res) {
 		    	var userQuery = new Parse.Query("User");
 		    	userQuery.get(req.session.user.objectId).then(function(user) {
 		    		var token = parseInt(req.session.tokens) + parseInt(req.body.amount);
-		    		console.log(token);
 		    		req.session.tokens = token;
 					var tokenQuery = new Parse.Query('Tokens');
 					tokenQuery.equalTo('user', user);
-					tokenQuery.find().then(function(token) {
-						console.log(token);
-						token[0].save({token: token})
+					tokenQuery.find().then(function(tokens) {
+						tokens[0].save({
+						'token': token
+						}).then(function(result) {
+						// The save was successful.
 						res.redirect('/')
+						}, function(error) {
+						// The save failed.  Error is an instance of Parse.Error.
+						console.log(error)
+						});						
 					});
 		    	});		    	
 		    });    	
