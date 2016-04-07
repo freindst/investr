@@ -10,7 +10,7 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 //testing
 router.get('/', function(req, res, next){
-	res.send('you are using mobile');
+	res.send('you are in mobile')
 })
 
 //retrieverealtime stock quote
@@ -34,6 +34,18 @@ router.get('/news/:stock_symbol', function(req, res){
 			res.send(json);
 		});
 })
+
+//industrial index
+router.get('/industrial_index', function(req, res) {
+	var symbols = ['^DJI', '^IXIC', '^GSPC', 'WTI'];
+	var symbolString = ['Dow', 'Nasdaq', 'S&P', 'WTI NYMEX Crude Oil'];
+	var stocks = getStocks(symbols);
+	var index = {};
+	for (var i in stocks) {
+		index[symbolString[i]] = stocks[i];
+	}
+	res.send(index);
+});
 
 //yahoo finance historical data
 router.post('/historicaldata/', function(req,res) {
