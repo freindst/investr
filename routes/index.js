@@ -87,17 +87,20 @@ var schedule_list = [];
 				{
 					schedule_i.scheduleStart = schedule.scheduleJob(StartTime, function() {
 						games[j].save({Playing: true});
+						console.log("start")
 					});
 				}
 				if (EndTime.getTime() > currentDate.getTime())
 				{
 					schedule_i.scheduleEnd = schedule.scheduleJob(EndTime, function() {
 						checkOutGame(games[j].id);
+						console.log("end")
 					});
 				}
 				schedule_list.push(schedule_i);
 			})();
 		}
+		console.log(schedule_list);
 	});
 })();
 
@@ -110,7 +113,8 @@ router.get('/log', function(req, res) {
 })
 
 router.get('/test/', function(req, res){
-	res.render('test');
+	console.log(schedule_list);
+	res.send('test');
 })
 
 router.get('/inPlay/:username', function(req, res){
@@ -350,8 +354,12 @@ router.post("/updateGame/", function(req, res) {
 					var isExist = false;
 					for (var i in schedule_list) {
 						if (schedule_list[i].GameID == game.id) {
-							schedule_list[i].scheduleStart.cancel();
-							schedule_list[i].scheduleEnd.cancel();
+							if (schedule_list[i].scheduleStart) {
+								schedule_list[i].scheduleStart.cancel();
+							}
+							if (schedule_list[i].scheduleEnd) {
+								schedule_list[i].scheduleEnd.cancel();
+							}							
 							isExist = true;
 							break;
 						}
@@ -364,12 +372,14 @@ router.post("/updateGame/", function(req, res) {
 					var currentDate = new Date();
 					if (StartTime.getTime() > currentDate.getTime())
 					    {
+					    	console.log("start time is in future")
 					      schedule_i.scheduleStart = schedule.scheduleJob(StartTime, function() {
 					        game.save({Playing: true});
 					      });
 					    }
 					    if (EndTime.getTime() > currentDate.getTime())
 					    {
+					    	console.log("end time is in future")
 					      schedule_i.scheduleEnd = schedule.scheduleJob(EndTime, function() {
 					        checkOutGame(game.id);
 					      });
@@ -755,7 +765,7 @@ router.get("/checkoutAll/:game_id", function (req, res) {
 						finalStandings: rankArray
 					});
 					res.send({
-						result: "success"
+						result: "checkout success"
 					});
 				}
 			});
@@ -893,7 +903,11 @@ function checkOutGame(game_id) {
 						ownedStocks[n].share = "0";
 					}
 				}
-				log.push(logGenerator("checkout-$" + currentMoney));
+				log.push({
+					operation: "checkout",
+					wallet: currentMoney,
+					time: new Date()
+				});
 				rankArray.push({
 					username: transactions[i].attributes.userName,
 					wallet: currentMoney
@@ -924,7 +938,7 @@ function checkOutGame(game_id) {
 						finalStandings: finalStandings
 					});
 					console.log({
-						result: "success"
+						result: "checkout success"
 					});
 				}
 			});
